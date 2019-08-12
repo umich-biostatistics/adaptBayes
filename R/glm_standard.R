@@ -56,7 +56,7 @@
 #' user provides nothing but a valid 'stan_path', then the stan script is compiled.
 #' Second, the user provides both a compiled stanfit object as well asvalues for y,
 #' x_standardized, #, q, and any other desired arguments to actually fit a regression.
-#'
+#' 
 #' @param stan_fit an R object of class stanfit, which allows the function to run
 #' without recompiling the stan code.
 #' @param stan_path (character) a path pointing to a .stan file, which indicates
