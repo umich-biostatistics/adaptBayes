@@ -1,26 +1,28 @@
 
-#DESCRIPTION: Program for fitting a GLM equipped with the 'sensible adaptive bayes' prior evaluated in the manuscript
+#DESCRIPTION: Program for fitting a GLM equipped with the 'naive adaptive bayes' prior evaluated in the manuscript
 #
 #
-#ARGUMENTS: (only those distinct from glm_standard and glm_nab are discussed)
+#ARGUMENTS: (only those distinct from glm_standard are discussed)
 #
-#aug_projection: (matrix) pxq matrix that approximately projects the regression coefficients of
-#the augmented predictors onto the space of the regression coefficients for the original predictors.
-#This is the matrix P in the notation of Boonstra and Barbaro. It can be calculated using the function
-#'create_projection'.
+#alpha_prior_mean (vector) p-length vector giving the mean of alpha from the historical analysis,
+#corresponds to m_alpha in Boonstra and Barbaro
 #
-#eigendecomp_hist_var: R object of class 'eigen' containing a pxp matrix of eigenvectors in each row
-#(equivalent to v_0 in Boonstra and Barbaro) and a p-length vector of eigenvalues. This is by default
-#equal to eigen(alpha_prior_cov)
+#alpha_prior_cov (matrix) pxp positive definite matrix giving the variance of alpha from the historical
+#analysis, corresponds to S_alpha in Boonstra and Barbaro
 #
-#scale_to_variance225: a vector assumed to be such that, when multiplied by the diagonal elements of
-#alpha_prior_cov, the result is a vector of elements each equal to 225. This is explicitly calculated
-#if it is not provided
+#phi_mean (real) mean of phi corresponding to a normal distribution, support is truncated to [0,1]
+#
+#phi_sd (pos. real) sd of phi corresponding to a normal distribution, support is truncated to [0,1]
+#
+#beta_aug_scale_tilde (pos. real) constant indicating the prior scale of the horseshoe for the augmented
+#covariates when phi = 1, i.e. when the historical analysis is fully used. This corresponds to tilde_c in
+#Boonstra and Barbaro
 
-#' Fit GLM with the 'sensible adaptive bayes' prior
+#' Fit GLM with the 'naive adaptive bayes' prior
 #'
-#' Program for fitting a GLM equipped with the 'sensible adaptive bayes' prior
-#' evaluated in the manuscript.
+#' Program for fitting a GLM equipped with the 'naive adaptive bayes' prior evaluated
+#' in the manuscript.
+#'
 #'
 #' @param stan_fit an R object of class stanfit, which allows the function to run
 #' without recompiling the stan code.
@@ -29,7 +31,7 @@
 #' stan_fit takes precedence.
 #' @param y (vector) outcomes corresponding to the type of glm desired. This should
 #' match whatever datatype is expected by the stan program.
-#' @param x_standardized (matrix) matrix of numeric values with number of rows equal
+#'@param x_standardized (matrix) matrix of numeric values with number of rows equal
 #' to the length of y and number of columns equal to p+q. It is assumed without
 #' verification that each column is standardized to whatever scale the prior
 #' expects - in Boonstra and Barbaro, all predictors are marginally generated to have
@@ -45,6 +47,9 @@
 #' @param phi_sd (pos. real) sd of phi corresponding to a normal distribution, support is truncated to [0,1]
 #' @param beta_orig_scale fill
 #' @param beta_aug_scale fill
+#' @param beta_aug_scale_tilde (pos. real) constant indicating the prior scale of
+#' the horseshoe for the augmented covariates when phi = 1, i.e. when the historical
+#' analysis is fully used. This corresponds to tilde_c in Boonstra and Barbaro
 #' @param local_dof fill
 #' @param global_dof fill
 #' @param slab_precision (pos. real) the slab-part of the regularized horseshoe,
@@ -66,19 +71,20 @@
 #' @return List draws and other model information
 #'
 #' @import rstan
+#'
 #' @export
 
-glm_sab = function(stan_fit = NA,
+glm_nab = function(stan_fit = NA,
                    stan_path,
                    y = c(0,1),
                    x_standardized = matrix(0,length(y),6),
                    alpha_prior_mean = rep(0, 3),
                    alpha_prior_cov = diag(1, 3),
-                   aug_projection = diag(1, 3),
                    phi_mean = 0.5,
                    phi_sd = 2.5,
                    beta_orig_scale = 1,
                    beta_aug_scale = 1,
+                   beta_aug_scale_tilde = 1,
                    local_dof = 1,
                    global_dof = 1,
                    slab_precision = (1/15)^2,
@@ -125,7 +131,6 @@ glm_sab = function(stan_fit = NA,
                                                     q_stan = q,
                                                     y_stan = y,
                                                     x_standardized_stan = x_standardized,
-                                                    aug_projection_stan = aug_projection,
                                                     alpha_prior_mean_stan = alpha_prior_mean,
                                                     alpha_prior_cov_stan = alpha_prior_cov,
                                                     sqrt_eigenval_hist_var_stan = sqrt_eigenval_hist_var,
@@ -134,6 +139,7 @@ glm_sab = function(stan_fit = NA,
                                                     global_dof_stan = global_dof,
                                                     beta_orig_scale_stan = beta_orig_scale,
                                                     beta_aug_scale_stan = beta_aug_scale,
+                                                    beta_aug_scale_tilde_stan = beta_aug_scale_tilde,
                                                     slab_precision_stan = slab_precision,
                                                     scale_to_variance225 = scale_to_variance225,
                                                     phi_mean_stan = phi_mean,
