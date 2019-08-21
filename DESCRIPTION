@@ -1,12 +1,16 @@
 Package: AdaptiveBayesianUpdates
-Type: Package
-Title: What the Package Does (Title Case)
-Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Title: Adaptive Bayesian Updates
+Version: 1.0
+Authors@R: c(
+    person(given = "Phil", family = "Boonstra", role = c("aut"), email = "philb@umich.edu"),
+    person(given = "Michael", family = "Kleinsasser", role = c("cre"), email = "mkleinsa@umich.edu"))
+Description: Boonstra, Philip S. and Barbaro, Ryan P., “Incorporating Historical 
+    Models with Adaptive Bayesian Updates” (2018) In Press at Biostatistics.
+    <doi:10.5281/zenodo.1404429>
+License: GPL-2
+Imports: rstan
 Encoding: UTF-8
 LazyData: true
+BugReports: https://github.com/umich-biostatistics/AdaptiveBayesianUpdates/issues
+Roxygen: list(markdown = TRUE)
 RoxygenNote: 6.1.1.9000

@@ -40,11 +40,11 @@ calculate_m_eff(scale1, scale2 = NA, npar1, npar2 = 0, local_dof = 1,
 list containing prior numbers 1 and 2
 }
 \description{
-Instead of providing a desired effective number of parameters, the user provides 
-the scale value(s), which is c in the notation of Boonstra and Barbaro, and the the 
-function gives the implied prior number of effective parameters based upon this. 
-As with 'solve_for_hiershrink_scale', the user can provide one global scale parameter 
-(scale1, leaving scale2 = NA) that applies to all parameters, or two regional scale 
-parameters (scale1, scale2), that applies to a partition of the parameters as 
+Instead of providing a desired effective number of parameters, the user provides
+the scale value(s), which is c in the notation of Boonstra and Barbaro, and the the
+function gives the implied prior number of effective parameters based upon this.
+As with 'solve_for_hiershrink_scale', the user can provide one global scale parameter
+(scale1, leaving scale2 = NA) that applies to all parameters, or two regional scale
+parameters (scale1, scale2), that applies to a partition of the parameters as
 defined by the first npar1 parameters and the second npar2 parameters.
 }

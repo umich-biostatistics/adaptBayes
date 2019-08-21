@@ -62,9 +62,9 @@ has been reached. The reported fit will be that with the fewest number of diverg
 List containing the draws and other information.
 }
 \description{
-Program for fitting a GLM equipped with a regularized student-t prior on the regression 
-coefficients, parametrized using the normal-inverse-gamma distribution. The 'regularization' 
-refers to the fact that the inverse-gamma scale is has a finite upper bound that 
-it smoothly approaches. This method was not used in the simulation study but was 
+Program for fitting a GLM equipped with a regularized student-t prior on the regression
+coefficients, parametrized using the normal-inverse-gamma distribution. The 'regularization'
+refers to the fact that the inverse-gamma scale is has a finite upper bound that
+it smoothly approaches. This method was not used in the simulation study but was
 used in the data analysis. Specifically, it corresponds to 'PedRESC2'.
 }

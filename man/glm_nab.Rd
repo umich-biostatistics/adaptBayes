@@ -34,22 +34,22 @@ all data should be standardized to have a common scale before model fitting.
 If regression coefficients on the natural scale are desired, they be easily obtained
 through unstandardizing.}
 
-\item{alpha_prior_mean}{(vector) p-length vector giving the mean of alpha from the 
+\item{alpha_prior_mean}{(vector) p-length vector giving the mean of alpha from the
 historical analysis, corresponds to m_alpha in Boonstra and Barbaro}
 
-\item{alpha_prior_cov}{(matrix) pxp positive definite matrix giving the variance of 
+\item{alpha_prior_cov}{(matrix) pxp positive definite matrix giving the variance of
 alpha from the historical analysis, corresponds to S_alpha in Boonstra and Barbaro}
 
-\item{phi_mean}{(real) mean of phi corresponding to a normal distribution, support is truncated to [0,1]}
+\item{phi_mean}{(real) mean of phi corresponding to a normal distribution, support is truncated to \link{0,1}}
 
-\item{phi_sd}{(pos. real) sd of phi corresponding to a normal distribution, support is truncated to [0,1]}
+\item{phi_sd}{(pos. real) sd of phi corresponding to a normal distribution, support is truncated to \link{0,1}}
 
 \item{beta_orig_scale}{fill}
 
 \item{beta_aug_scale}{fill}
 
-\item{beta_aug_scale_tilde}{(pos. real) constant indicating the prior scale of 
-the horseshoe for the augmented covariates when phi = 1, i.e. when the historical 
+\item{beta_aug_scale_tilde}{(pos. real) constant indicating the prior scale of
+the horseshoe for the augmented covariates when phi = 1, i.e. when the historical
 analysis is fully used. This corresponds to tilde_c in Boonstra and Barbaro}
 
 \item{local_dof}{fill}
@@ -87,6 +87,6 @@ has been reached. The reported fit will be that with the fewest number of diverg
 List draws and other model information
 }
 \description{
-Program for fitting a GLM equipped with the 'naive adaptive bayes' prior evaluated 
+Program for fitting a GLM equipped with the 'naive adaptive bayes' prior evaluated
 in the manuscript.
 }

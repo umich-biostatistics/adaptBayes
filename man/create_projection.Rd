@@ -9,40 +9,40 @@ create_projection(x_curr_orig, x_curr_aug, eigenvec_hist_var,
   seed_start = sample(.Machine$integer.max, 1), predictorMatrix = NULL)
 }
 \arguments{
-\item{x_curr_orig}{(matrices) matrices with equal numbers of rows and p & q columns, 
-respectively. These are used to estimate the joint association between the original 
+\item{x_curr_orig}{(matrices) matrices with equal numbers of rows and p & q columns,
+respectively. These are used to estimate the joint association between the original
 and augmented covariates, which is needed for the imputation model}
 
-\item{x_curr_aug}{(matrices) matrices with equal numbers of rows and p & q columns, 
-respectively. These are used to estimate the joint association between the original 
+\item{x_curr_aug}{(matrices) matrices with equal numbers of rows and p & q columns,
+respectively. These are used to estimate the joint association between the original
 and augmented covariates, which is needed for the imputation model}
 
-\item{eigenvec_hist_var}{(matrix) pxp matrix with each row corresponding to an 
+\item{eigenvec_hist_var}{(matrix) pxp matrix with each row corresponding to an
 eigenvector. This is v_0 in Boonstra and Barbaro.}
 
-\item{imputes_list}{(list) list of length-2 vectors, with each vector containing 
-the lower and upper indices of the imputations to use for a projection matrix 
-in the SAB method. This is best explained with an example: if 
-imputes_list = list(c(1,15),c(16,100),c(1,100)), then three projection matrices 
-will be returned. One will be based upon the first 15 imputations from a run of 
-MICE, the second based upon the last 85 imputations from that same run (i.e. the 16th-100th 
-imputations), and the third will be based upon all 100 imputations from this same run. 
-This is coded as such to allow for flexible exploration of the impact of number of 
+\item{imputes_list}{(list) list of length-2 vectors, with each vector containing
+the lower and upper indices of the imputations to use for a projection matrix
+in the SAB method. This is best explained with an example: if
+imputes_list = list(c(1,15),c(16,100),c(1,100)), then three projection matrices
+will be returned. One will be based upon the first 15 imputations from a run of
+MICE, the second based upon the last 85 imputations from that same run (i.e. the 16th-100th
+imputations), and the third will be based upon all 100 imputations from this same run.
+This is coded as such to allow for flexible exploration of the impact of number of
 imputations or variability due to imputations.}
 
 \item{seed_start}{(pos. integer) random seed to start each imputation}
 
-\item{predictorMatrix}{(matrix) (p+q)x(p+q) matrix equivalent to argument of the 
-same name in in the 'mice()' function (type '?mice'). It is specially calculated 
-based upon a monotone missingness pattern (x^o is fully observed, x^a is not) Thus 
-it samples from [X^a_{1...q}|X^o] = [X^a_1|X^o]*[X^a_2|X^o,X^a_1]*...}
+\item{predictorMatrix}{(matrix) (p+q)x(p+q) matrix equivalent to argument of the
+same name in in the 'mice()' function (type '?mice'). It is specially calculated
+based upon a monotone missingness pattern (x^o is fully observed, x^a is not) Thus
+it samples from \link{X^a_{1...q}|X^o} = \link{X^a_1|X^o}*\link{X^a_2|X^o,X^a_1}*...}
 }
 \value{
-A list as long as the the length of imputes_list, with each element containing 
-a different projection matrix using the indices of the imputations specified in the 
+A list as long as the the length of imputes_list, with each element containing
+a different projection matrix using the indices of the imputations specified in the
 corresponding element of imputes_list.
 }
 \description{
-Helper function to make projection matrix (or list of projection matrices), which 
+Helper function to make projection matrix (or list of projection matrices), which
 is P in the notation of Boonstra and Barbaro.
 }

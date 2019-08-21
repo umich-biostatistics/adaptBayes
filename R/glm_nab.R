@@ -4,11 +4,11 @@
 #
 #ARGUMENTS: (only those distinct from glm_standard are discussed)
 #
-#alpha_prior_mean (vector) p-length vector giving the mean of alpha from the historical analysis, 
-#corresponds to m_alpha in Boonstra and Barbaro 
+#alpha_prior_mean (vector) p-length vector giving the mean of alpha from the historical analysis,
+#corresponds to m_alpha in Boonstra and Barbaro
 #
 #alpha_prior_cov (matrix) pxp positive definite matrix giving the variance of alpha from the historical
-#analysis, corresponds to S_alpha in Boonstra and Barbaro 
+#analysis, corresponds to S_alpha in Boonstra and Barbaro
 #
 #phi_mean (real) mean of phi corresponding to a normal distribution, support is truncated to [0,1]
 #
@@ -16,11 +16,11 @@
 #
 #beta_aug_scale_tilde (pos. real) constant indicating the prior scale of the horseshoe for the augmented
 #covariates when phi = 1, i.e. when the historical analysis is fully used. This corresponds to tilde_c in
-#Boonstra and Barbaro 
+#Boonstra and Barbaro
 
 #' Fit GLM with the 'naive adaptive bayes' prior
-#' 
-#' Program for fitting a GLM equipped with the 'naive adaptive bayes' prior evaluated 
+#'
+#' Program for fitting a GLM equipped with the 'naive adaptive bayes' prior evaluated
 #' in the manuscript.
 #'
 #'
@@ -39,17 +39,17 @@
 #' all data should be standardized to have a common scale before model fitting.
 #' If regression coefficients on the natural scale are desired, they be easily obtained
 #' through unstandardizing.
-#' @param alpha_prior_mean (vector) p-length vector giving the mean of alpha from the 
+#' @param alpha_prior_mean (vector) p-length vector giving the mean of alpha from the
 #' historical analysis, corresponds to m_alpha in Boonstra and Barbaro
-#' @param alpha_prior_cov (matrix) pxp positive definite matrix giving the variance of 
-#' alpha from the historical analysis, corresponds to S_alpha in Boonstra and Barbaro 
+#' @param alpha_prior_cov (matrix) pxp positive definite matrix giving the variance of
+#' alpha from the historical analysis, corresponds to S_alpha in Boonstra and Barbaro
 #' @param phi_mean (real) mean of phi corresponding to a normal distribution, support is truncated to [0,1]
 #' @param phi_sd (pos. real) sd of phi corresponding to a normal distribution, support is truncated to [0,1]
 #' @param beta_orig_scale fill
 #' @param beta_aug_scale fill
-#' @param beta_aug_scale_tilde (pos. real) constant indicating the prior scale of 
-#' the horseshoe for the augmented covariates when phi = 1, i.e. when the historical 
-#' analysis is fully used. This corresponds to tilde_c in Boonstra and Barbaro 
+#' @param beta_aug_scale_tilde (pos. real) constant indicating the prior scale of
+#' the horseshoe for the augmented covariates when phi = 1, i.e. when the historical
+#' analysis is fully used. This corresponds to tilde_c in Boonstra and Barbaro
 #' @param local_dof fill
 #' @param global_dof fill
 #' @param slab_precision (pos. real) the slab-part of the regularized horseshoe,
@@ -69,46 +69,48 @@
 #' @param scale_to_variance225 fill
 #'
 #' @return List draws and other model information
-#' 
+#'
+#' @import rstan
+#'
 #' @export
 
-glm_nab = function(stan_fit = NA, 
+glm_nab = function(stan_fit = NA,
                    stan_path,
                    y = c(0,1),
-                   x_standardized = matrix(0,length(y),6), 
+                   x_standardized = matrix(0,length(y),6),
                    alpha_prior_mean = rep(0, 3),
                    alpha_prior_cov = diag(1, 3),
                    phi_mean = 0.5,
                    phi_sd = 2.5,
-                   beta_orig_scale = 1, 
-                   beta_aug_scale = 1, 
+                   beta_orig_scale = 1,
+                   beta_aug_scale = 1,
                    beta_aug_scale_tilde = 1,
-                   local_dof = 1, 
-                   global_dof = 1, 
-                   slab_precision = (1/15)^2, 
-                   only_prior = F, 
-                   mc_warmup = 50, 
-                   mc_iter_after_warmup = 50, 
-                   mc_chains = 1, 
-                   mc_thin = 1, 
-                   mc_stepsize = 0.1, 
+                   local_dof = 1,
+                   global_dof = 1,
+                   slab_precision = (1/15)^2,
+                   only_prior = F,
+                   mc_warmup = 50,
+                   mc_iter_after_warmup = 50,
+                   mc_chains = 1,
+                   mc_thin = 1,
+                   mc_stepsize = 0.1,
                    mc_adapt_delta = 0.9,
                    mc_max_treedepth = 15,
                    ntries = 1,
                    eigendecomp_hist_var = NULL,
                    scale_to_variance225 = NULL
 ) {
-  
+
   if(is.null(eigendecomp_hist_var)) {
     eigendecomp_hist_var = eigen(alpha_prior_cov);
   }
   eigenvec_hist_var = t(eigendecomp_hist_var$vectors);
   sqrt_eigenval_hist_var = sqrt(eigendecomp_hist_var$values);
-  
+
   if(is.null(scale_to_variance225)) {
     scale_to_variance225 = diag(alpha_prior_cov) / 225;
   }
-  
+
   p = length(alpha_prior_mean);
   q = ncol(x_standardized) - p;
   if(p == 1) {
@@ -116,11 +118,11 @@ glm_nab = function(stan_fit = NA,
     sqrt_eigenval_hist_var = array(sqrt_eigenval_hist_var,dim=1);
     scale_to_variance225 = array(scale_to_variance225,dim=1);
   }
-  
+
   max_divergences = -Inf;
   accepted_divergences = Inf;
   curr_try = 1;
-  
+
   while(curr_try <= ntries) {
     assign("curr_fit",tryCatch.W.E(stan(file = stan_path,
                                         fit = stan_fit,
@@ -142,15 +144,15 @@ glm_nab = function(stan_fit = NA,
                                                     scale_to_variance225 = scale_to_variance225,
                                                     phi_mean_stan = phi_mean,
                                                     phi_sd_stan = phi_sd,
-                                                    only_prior = as.integer(only_prior)), 
-                                        warmup = mc_warmup, 
-                                        iter = mc_iter_after_warmup + mc_warmup, 
-                                        chains = mc_chains, 
+                                                    only_prior = as.integer(only_prior)),
+                                        warmup = mc_warmup,
+                                        iter = mc_iter_after_warmup + mc_warmup,
+                                        chains = mc_chains,
                                         thin = mc_thin,
                                         control = list(stepsize = mc_stepsize,
                                                        adapt_delta = mc_adapt_delta,
-                                                       max_treedepth = mc_max_treedepth)))); 
-    
+                                                       max_treedepth = mc_max_treedepth))));
+
     if("simpleError"%in%class(curr_fit$value) || "error"%in%class(curr_fit$value)) {
       stop(curr_fit$value);
     }
@@ -159,9 +161,9 @@ glm_nab = function(stan_fit = NA,
     }
     divergent_check = unlist(lapply(curr_fit$warning,grep,pattern="divergent transitions",value=T));
     rhat_check = max(summary(curr_fit$value)$summary[,"Rhat"],na.rm=T);
-    #Originally, the break conditions were baesd upon having both no divergent transitions as well as a max Rhat (i.e. gelman-rubin 
+    #Originally, the break conditions were baesd upon having both no divergent transitions as well as a max Rhat (i.e. gelman-rubin
     #diagnostic) sufficiently close to 1. I subsequently changed the conditions to be based only upon the first, which is reflected
-    #by setting rhat = T immediately below. 
+    #by setting rhat = T immediately below.
     break_conditions = c(divergence = F, rhat = T);
     if(length(divergent_check) == 0) {#corresponds to zero divergent transitions
       curr_divergences = 0;

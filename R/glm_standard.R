@@ -56,7 +56,7 @@
 #' user provides nothing but a valid 'stan_path', then the stan script is compiled.
 #' Second, the user provides both a compiled stanfit object as well asvalues for y,
 #' x_standardized, #, q, and any other desired arguments to actually fit a regression.
-#' 
+#'
 #' @param stan_fit an R object of class stanfit, which allows the function to run
 #' without recompiling the stan code.
 #' @param stan_path (character) a path pointing to a .stan file, which indicates
@@ -113,6 +113,8 @@
 #' stopping either when the number of divergent transitions* is zero or when ntries
 #' has been reached. The reported fit will be that with the fewest number of divergent iterations.
 #'
+#' @import rstan
+#'
 #' @return \code{list} object containing the
 
 glm_standard = function(stan_fit = NA,
@@ -145,7 +147,7 @@ glm_standard = function(stan_fit = NA,
   if(is.null(intercept_offset)) {intercept_offset = numeric(length(y));}
 
   while(curr_try <= ntries) {
-    assign("curr_fit",tryCatch.W.E(stan(file = stan_path, # stan
+    assign("curr_fit",tryCatch.W.E(stan(file = stan_path,
                                         fit = stan_fit,
                                         data = list(n_stan = length(y),
                                                     p_stan = p,
