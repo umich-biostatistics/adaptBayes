@@ -10,34 +10,36 @@ calculate_m_eff(scale1, scale2 = NA, npar1, npar2 = 0, local_dof = 1,
   n_sim = 2e+05)
 }
 \arguments{
-\item{scale1}{}
+\item{scale1}{global (if scale2=NA) or regional scale parameter value 1}
 
-\item{scale2}{}
+\item{scale2}{regional scale parameter value 2, can be NA if scale 1 is specified}
 
-\item{npar1}{}
+\item{npar1}{partition of the parameters}
 
-\item{npar2}{}
+\item{npar2}{second part of partition of the parameters}
 
-\item{local_dof}{}
+\item{local_dof}{local degrees of freedom}
 
-\item{regional_dof}{}
+\item{regional_dof}{regional degrees of freedom}
 
-\item{global_dof}{}
+\item{global_dof}{global degrees of freedom}
 
-\item{slab_precision}{}
+\item{slab_precision}{(pos. real) the slab-part of the regularized horseshoe,
+this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro}
 
-\item{n}{}
+\item{n}{sample size}
 
-\item{sigma}{}
+\item{sigma}{varaince}
 
-\item{tol}{}
+\item{tol}{tolerance level}
 
-\item{max_iter}{}
+\item{max_iter}{max number of iterations}
 
-\item{n_sim}{}
+\item{n_sim}{number of simulates}
 }
 \value{
-list containing prior numbers 1 and 2
+A list containing prior numbers 1 and 2, the implied prior number of
+effective parameters.
 }
 \description{
 Instead of providing a desired effective number of parameters, the user provides

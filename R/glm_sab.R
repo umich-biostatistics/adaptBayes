@@ -63,7 +63,7 @@
 #' @param eigendecomp_hist_var fill
 #' @param scale_to_variance225 fill
 #'
-#' @return List draws and other model information
+#' @return \code{list} object containing the draws and other information.
 #'
 #' @import rstan
 #' @export

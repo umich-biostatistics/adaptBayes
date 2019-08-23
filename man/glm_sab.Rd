@@ -82,7 +82,7 @@ has been reached. The reported fit will be that with the fewest number of diverg
 \item{scale_to_variance225}{fill}
 }
 \value{
-List draws and other model information
+\code{list} object containing the draws and other information.
 }
 \description{
 Program for fitting a GLM equipped with the 'sensible adaptive bayes' prior

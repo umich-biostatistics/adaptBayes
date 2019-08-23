@@ -50,7 +50,7 @@
 #' stopping either when the number of divergent transitions* is zero or when ntries
 #' has been reached. The reported fit will be that with the fewest number of divergent iterations.
 #'
-#' @return List containing the draws and other information.
+#' @return \code{list} object containing the draws and other information.
 #'
 #' @import rstan
 #'

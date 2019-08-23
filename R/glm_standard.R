@@ -115,7 +115,7 @@
 #'
 #' @import rstan
 #'
-#' @return \code{list} object containing the
+#' @return \code{list} object containing the draws and other information.
 
 glm_standard = function(stan_fit = NA,
                         stan_path,

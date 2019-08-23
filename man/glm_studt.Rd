@@ -59,7 +59,7 @@ stopping either when the number of divergent transitions* is zero or when ntries
 has been reached. The reported fit will be that with the fewest number of divergent iterations.}
 }
 \value{
-List containing the draws and other information.
+\code{list} object containing the draws and other information.
 }
 \description{
 Program for fitting a GLM equipped with a regularized student-t prior on the regression
