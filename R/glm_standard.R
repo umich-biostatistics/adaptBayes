@@ -118,7 +118,7 @@
 #' @return \code{list} object containing the draws and other information.
 
 glm_standard = function(stan_fit = NA,
-                        stan_path,
+                        stan_path = NA,
                         y = c(0,1),
                         x_standardized = matrix(0,length(y),6),
                         p = 3,
@@ -148,7 +148,7 @@ glm_standard = function(stan_fit = NA,
 
   while(curr_try <= ntries) {
     assign("curr_fit",tryCatch.W.E(stan(file = stan_path,
-                                        fit = stan_fit,
+                                        fit = stan_fit,# ,
                                         data = list(n_stan = length(y),
                                                     p_stan = p,
                                                     q_stan = q,
