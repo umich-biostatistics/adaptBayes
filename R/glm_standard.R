@@ -2,7 +2,7 @@
 #DESCRIPTION: Program for fitting a GLM equipped with the 'standard' prior evaluated
 #in Boonstra and Barbaro, which is the regularized horseshoe. It has two intended uses:
 #compile stan scripts or analyze data. First, if the user provides nothing but a valid
-#'stan_path', then the stan script is compiled. Second, the user provides both a compiled
+#stan_path, then the stan script is compiled. Second, the user provides both a compiled
 #stanfit object as well asvalues for y, x_standardized, #, q, and any other desired
 #arguments to actually fit a regression.
 #
@@ -118,7 +118,7 @@
 #' @return \code{list} object containing the draws and other information.
 
 glm_standard = function(stan_fit = NA,
-                        stan_path = NA,
+                        stan_path,
                         y = c(0,1),
                         x_standardized = matrix(0,length(y),6),
                         p = 3,

@@ -31,7 +31,7 @@
 #' stan_fit takes precedence.
 #' @param y (vector) outcomes corresponding to the type of glm desired. This should
 #' match whatever datatype is expected by the stan program.
-#'@param x_standardized (matrix) matrix of numeric values with number of rows equal
+#' @param x_standardized (matrix) matrix of numeric values with number of rows equal
 #' to the length of y and number of columns equal to p+q. It is assumed without
 #' verification that each column is standardized to whatever scale the prior
 #' expects - in Boonstra and Barbaro, all predictors are marginally generated to have
@@ -45,13 +45,21 @@
 #' alpha from the historical analysis, corresponds to S_alpha in Boonstra and Barbaro
 #' @param phi_mean (real) mean of phi corresponding to a normal distribution, support is truncated to [0,1]
 #' @param phi_sd (pos. real) sd of phi corresponding to a normal distribution, support is truncated to [0,1]
-#' @param beta_orig_scale fill
-#' @param beta_aug_scale fill
+#' @param beta_orig_scale (pos. real) constants indicating the prior scale of the
+#' horseshoe. Both values correspond to 'c' in the notation of Boonstra and Barbaro,
+#' because that paper never considers beta_orig_scale!=beta_aug_scale
+#' @param beta_aug_scale (pos. real) constants indicating the prior scale of the
+#' horseshoe. Both values correspond to 'c' in the notation of Boonstra and Barbaro,
+#' because that paper never considers beta_orig_scale!=beta_aug_scale
 #' @param beta_aug_scale_tilde (pos. real) constant indicating the prior scale of
 #' the horseshoe for the augmented covariates when phi = 1, i.e. when the historical
 #' analysis is fully used. This corresponds to tilde_c in Boonstra and Barbaro
-#' @param local_dof fill
-#' @param global_dof fill
+#' @param local_dof (pos. integer) numbers indicating the degrees of freedom for
+#' lambda_j and tau, respectively. Boonstra, et al. never considered local_dof != 1
+#' or global_dof != 1.
+#' @param global_dof (pos. integer) numbers indicating the degrees of freedom for
+#' lambda_j and tau, respectively. Boonstra, et al. never considered local_dof != 1
+#' or global_dof != 1.
 #' @param slab_precision (pos. real) the slab-part of the regularized horseshoe,
 #' this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro
 #' @param only_prior (logical) should all data be ignored, sampling only from the prior?

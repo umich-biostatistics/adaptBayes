@@ -6,8 +6,7 @@
 #
 #aug_projection: (matrix) pxq matrix that approximately projects the regression coefficients of
 #the augmented predictors onto the space of the regression coefficients for the original predictors.
-#This is the matrix P in the notation of Boonstra and Barbaro. It can be calculated using the function
-#'create_projection'.
+#This is the matrix P in the notation of Boonstra and Barbaro. It can be calculated using the function 'create_projection'.
 #
 #eigendecomp_hist_var: R object of class 'eigen' containing a pxp matrix of eigenvectors in each row
 #(equivalent to v_0 in Boonstra and Barbaro) and a p-length vector of eigenvalues. This is by default
@@ -43,10 +42,18 @@
 #' alpha from the historical analysis, corresponds to S_alpha in Boonstra and Barbaro
 #' @param phi_mean (real) mean of phi corresponding to a normal distribution, support is truncated to [0,1]
 #' @param phi_sd (pos. real) sd of phi corresponding to a normal distribution, support is truncated to [0,1]
-#' @param beta_orig_scale fill
-#' @param beta_aug_scale fill
-#' @param local_dof fill
-#' @param global_dof fill
+#' @param beta_orig_scale (pos. real) constants indicating the prior scale of the
+#' horseshoe. Both values correspond to 'c' in the notation of Boonstra and Barbaro,
+#' because that paper never considers beta_orig_scale!=beta_aug_scale
+#' @param beta_aug_scale (pos. real) constants indicating the prior scale of the
+#' horseshoe. Both values correspond to 'c' in the notation of Boonstra and Barbaro,
+#' because that paper never considers beta_orig_scale!=beta_aug_scale
+#' @param local_dof (pos. integer) numbers indicating the degrees of freedom for
+#' lambda_j and tau, respectively. Boonstra, et al. never considered local_dof != 1
+#' or global_dof != 1.
+#' @param global_dof (pos. integer) numbers indicating the degrees of freedom for
+#' lambda_j and tau, respectively. Boonstra, et al. never considered local_dof != 1
+#' or global_dof != 1.
 #' @param slab_precision (pos. real) the slab-part of the regularized horseshoe,
 #' this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro
 #' @param only_prior (logical) should all data be ignored, sampling only from the prior?

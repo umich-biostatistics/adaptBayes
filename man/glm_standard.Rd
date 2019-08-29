@@ -2,8 +2,7 @@
 % Please edit documentation in R/glm_standard.R
 \name{glm_standard}
 \alias{glm_standard}
-\title{stan_path', then the stan script is compiled. Second, the user provides both a compiled
-GLM equipped with the 'standard' prior evaluated}
+\title{GLM equipped with the 'standard' prior evaluated}
 \usage{
 glm_standard(stan_fit = NA, stan_path, y = c(0, 1),
   x_standardized = matrix(0, length(y), 6), p = 3, q = 3,

@@ -2,8 +2,7 @@
 % Please edit documentation in R/glm_sab.R
 \name{glm_sab}
 \alias{glm_sab}
-\title{create_projection'.
-Fit GLM with the 'sensible adaptive bayes' prior}
+\title{Fit GLM with the 'sensible adaptive bayes' prior}
 \usage{
 glm_sab(stan_fit = NA, stan_path, y = c(0, 1),
   x_standardized = matrix(0, length(y), 6), alpha_prior_mean = rep(0,
@@ -46,13 +45,21 @@ alpha from the historical analysis, corresponds to S_alpha in Boonstra and Barba
 
 \item{phi_sd}{(pos. real) sd of phi corresponding to a normal distribution, support is truncated to \link{0,1}}
 
-\item{beta_orig_scale}{fill}
+\item{beta_orig_scale}{(pos. real) constants indicating the prior scale of the
+horseshoe. Both values correspond to 'c' in the notation of Boonstra and Barbaro,
+because that paper never considers beta_orig_scale!=beta_aug_scale}
 
-\item{beta_aug_scale}{fill}
+\item{beta_aug_scale}{(pos. real) constants indicating the prior scale of the
+horseshoe. Both values correspond to 'c' in the notation of Boonstra and Barbaro,
+because that paper never considers beta_orig_scale!=beta_aug_scale}
 
-\item{local_dof}{fill}
+\item{local_dof}{(pos. integer) numbers indicating the degrees of freedom for
+lambda_j and tau, respectively. Boonstra, et al. never considered local_dof != 1
+or global_dof != 1.}
 
-\item{global_dof}{fill}
+\item{global_dof}{(pos. integer) numbers indicating the degrees of freedom for
+lambda_j and tau, respectively. Boonstra, et al. never considered local_dof != 1
+or global_dof != 1.}
 
 \item{slab_precision}{(pos. real) the slab-part of the regularized horseshoe,
 this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro}
