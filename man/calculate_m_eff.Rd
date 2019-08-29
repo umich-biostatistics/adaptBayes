@@ -18,11 +18,15 @@ calculate_m_eff(scale1, scale2 = NA, npar1, npar2 = 0, local_dof = 1,
 
 \item{npar2}{second part of partition of the parameters}
 
-\item{local_dof}{local degrees of freedom}
+\item{local_dof}{(pos. integer) numbers indicating the degrees of freedom for
+lambda_j and tau, respectively. Boonstra, et al. never considered local_dof != 1
+or global_dof != 1.}
 
 \item{regional_dof}{regional degrees of freedom}
 
-\item{global_dof}{global degrees of freedom}
+\item{global_dof}{(pos. integer) numbers indicating the degrees of freedom for
+lambda_j and tau, respectively. Boonstra, et al. never considered local_dof != 1
+or global_dof != 1.}
 
 \item{slab_precision}{(pos. real) the slab-part of the regularized horseshoe,
 this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro}

@@ -4,7 +4,7 @@ Version: 1.0
 Authors@R: c(
     person(given = "Phil", family = "Boonstra", role = c("aut"), email = "philb@umich.edu"),
     person(given = "Michael", family = "Kleinsasser", role = c("cre"), email = "mkleinsa@umich.edu"))
-Description: Boonstra, Philip S. and Barbaro, Ryan P., “Incorporating Historical 
+Description: Core functions used in Boonstra, Philip S. and Barbaro, Ryan P., “Incorporating Historical 
     Models with Adaptive Bayesian Updates” (2018) In Press at Biostatistics.
     <doi:10.5281/zenodo.1404429>
 License: GPL-2

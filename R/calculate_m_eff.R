@@ -25,9 +25,13 @@
 #' @param scale2 regional scale parameter value 2, can be NA if scale 1 is specified
 #' @param npar1  partition of the parameters
 #' @param npar2  second part of partition of the parameters
-#' @param local_dof local degrees of freedom
+#' @param local_dof (pos. integer) numbers indicating the degrees of freedom for
+#' lambda_j and tau, respectively. Boonstra, et al. never considered local_dof != 1
+#' or global_dof != 1.
 #' @param regional_dof regional degrees of freedom
-#' @param global_dof global degrees of freedom
+#' @param global_dof (pos. integer) numbers indicating the degrees of freedom for
+#' lambda_j and tau, respectively. Boonstra, et al. never considered local_dof != 1
+#' or global_dof != 1.
 #' @param slab_precision (pos. real) the slab-part of the regularized horseshoe,
 #' this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro
 #' @param n sample size
