@@ -11,6 +11,6 @@ License: GPL-2
 Imports: rstan
 Encoding: UTF-8
 LazyData: true
-BugReports: https://github.com/umich-biostatistics/AdaptiveBayesianUpdates/issues
+BugReports: https://github.com/umich-biostatistics/adaptBayes/issues
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 6.1.1.9000
