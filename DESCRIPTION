@@ -1,4 +1,4 @@
-Package: AdaptiveBayesianUpdates
+Package: adaptBayes
 Title: Adaptive Bayesian Updates
 Version: 1.0
 Authors@R: c(
