@@ -1,89 +1,89 @@
 
 
-#DESCRIPTION: This function calculates a numerical-based solution to the scale parameter c in the the equation three lines 
+#DESCRIPTION: This function calculates a numerical-based solution to the scale parameter c in the the equation three lines
 #from the top of page 7 in Section 2 of Boonstra and Barbaro. If desired, the user may request regional scale values
 #for a partition of the covariates into two regions, defined by the first npar1 covariates and the second npar2 covariates.
-#This functionality was not used in Boonstra and Barbaro. 
+#This functionality was not used in Boonstra and Barbaro.
 #
 #
 #ARGUMENTS:
-#target_mean1, target_mean2 (pos. reals): the desired prior number of effective parameters (tilde xi_eff in Boonstra and Barbaro). 
-#If one scale parameter is desired, leave target_mean2 = NA. An error will be thrown if target_mean1 > npar1 or if 
-#target_mean2 > npar2. 
+#target_mean1, target_mean2 (pos. reals): the desired prior number of effective parameters (tilde xi_eff in Boonstra and Barbaro).
+#If one scale parameter is desired, leave target_mean2 = NA. An error will be thrown if target_mean1 > npar1 or if
+#target_mean2 > npar2.
 #
-#npar1, npar2 (pos. integers): the number of covariates. If one scale parameter is required, then leave npar2 = 0. 
+#npar1, npar2 (pos. integers): the number of covariates. If one scale parameter is required, then leave npar2 = 0.
 #
 #local_dof, global_dof (pos. integer) numbers indicating the degrees of freedom for lambda_j and tau, respectively. Boonstra
-#and Barbaro never considered local_dof != 1 or global_dof != 1. 
+#and Barbaro never considered local_dof != 1 or global_dof != 1.
 #
-#regional_dof (pos. integer) Not used in Boonstra and Barbaro. If 
+#regional_dof (pos. integer) Not used in Boonstra and Barbaro. If
 #
-#n (pos. integer) sample size 
+#n (pos. integer) sample size
 #
 #sigma (pos. real) square root of the assumed dispersion. In Boonstra and Barbaro, this was always 2, corresponding to the
-#maximum possible value: sqrt(1/[0.5 * (1 - 0.5)]). 
+#maximum possible value: sqrt(1/[0.5 * (1 - 0.5)]).
 #
 #tol (pos. real) numerical tolerance for convergence of solution
 #
 #max_iter (pos. integer) maximum number of iterations to run without convergence before giving up
 #
 #n_sim (pos. integer) number of simulated draws from the underlying student-t hyperpriors to calculate the Monte Carlo-based
-#approximation of the expectation. 
+#approximation of the expectation.
 #
 #slab_precision (pos. real) the slab-part of the regularized horseshoe, this is equivalent to (1/d)^2 in the notation of
-#Boonstra and Barbaro 
+#Boonstra and Barbaro
 
-#' Numerical-based solution to the scale parameter c 
-#' 
-#' This function calculates a numerical-based solution to the scale parameter c in 
-#' the the equation three lines from the top of page 7 in Section 2 of Boonstra and 
-#' Barbaro. If desired, the user may request regional scale values for a partition 
-#' of the covariates into two regions, defined by the first npar1 covariates and the 
-#' second npar2 covariates. This functionality was not used in Boonstra and Barbaro. 
+#' Numerical-based solution to the scale parameter c
 #'
-#' @param target_mean1 (pos. reals): the desired prior number of effective parameters 
-#' (tilde xi_eff in Boonstra and Barbaro). If one scale parameter is desired, leave 
-#' target_mean2 = NA. An error will be thrown if target_mean1 > npar1 or if 
-#' target_mean2 > npar2. 
-#' @param target_mean2 (pos. reals): the desired prior number of effective parameters 
-#' (tilde xi_eff in Boonstra and Barbaro). If one scale parameter is desired, leave 
-#' target_mean2 = NA. An error will be thrown if target_mean1 > npar1 or if 
-#' target_mean2 > npar2. 
-#' @param npar1 (pos. integers): the number of covariates. If one scale parameter 
+#' This function calculates a numerical-based solution to the scale parameter c in
+#' the the equation three lines from the top of page 7 in Section 2 of Boonstra and
+#' Barbaro. If desired, the user may request regional scale values for a partition
+#' of the covariates into two regions, defined by the first npar1 covariates and the
+#' second npar2 covariates. This functionality was not used in Boonstra and Barbaro.
+#'
+#' @param target_mean1 (pos. reals): the desired prior number of effective parameters
+#' (tilde xi_eff in Boonstra and Barbaro). If one scale parameter is desired, leave
+#' target_mean2 = NA. An error will be thrown if target_mean1 > npar1 or if
+#' target_mean2 > npar2.
+#' @param target_mean2 (pos. reals): the desired prior number of effective parameters
+#' (tilde xi_eff in Boonstra and Barbaro). If one scale parameter is desired, leave
+#' target_mean2 = NA. An error will be thrown if target_mean1 > npar1 or if
+#' target_mean2 > npar2.
+#' @param npar1 (pos. integers): the number of covariates. If one scale parameter
 #' is required, then leave npar2 = 0.
-#' @param npar2 (pos. integers): the number of covariates. If one scale parameter 
+#' @param npar2 (pos. integers): the number of covariates. If one scale parameter
 #' is required, then leave npar2 = 0.
-#' @param local_dof (pos. integer) numbers indicating the degrees of freedom for 
-#' lambda_j and tau, respectively. Boonstra and Barbaro never considered 
-#' local_dof != 1 or global_dof != 1. 
-#' @param regional_dof (pos. integer) Not used in Boonstra and Barbaro. If 
-#' @param global_dof (pos. integer) numbers indicating the degrees of freedom for 
-#' lambda_j and tau, respectively. Boonstra and Barbaro never considered 
-#' local_dof != 1 or global_dof != 1. 
-#' @param slab_precision (pos. real) the slab-part of the regularized horseshoe, 
-#' this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro 
+#' @param local_dof (pos. integer) numbers indicating the degrees of freedom for
+#' lambda_j and tau, respectively. Boonstra and Barbaro never considered
+#' local_dof != 1 or global_dof != 1.
+#' @param regional_dof (pos. integer) Not used in Boonstra and Barbaro.
+#' @param global_dof (pos. integer) numbers indicating the degrees of freedom for
+#' lambda_j and tau, respectively. Boonstra and Barbaro never considered
+#' local_dof != 1 or global_dof != 1.
+#' @param slab_precision (pos. real) the slab-part of the regularized horseshoe,
+#' this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro
 #' @param n (pos. integer) sample size
-#' @param sigma (pos. real) square root of the assumed dispersion. In Boonstra and 
+#' @param sigma (pos. real) square root of the assumed dispersion. In Boonstra and
 #' Barbaro, this was always 2, corresponding to the maximum possible value: sqrt(1/[0.5 * (1 - 0.5)]).
 #' @param tol (pos. real) numerical tolerance for convergence of solution
-#' @param max_iter (pos. integer) maximum number of iterations to run without 
+#' @param max_iter (pos. integer) maximum number of iterations to run without
 #' convergence before giving up
-#' @param n_sim (pos. integer) number of simulated draws from the underlying student-t 
+#' @param n_sim (pos. integer) number of simulated draws from the underlying student-t
 #' hyperpriors to calculate the Monte Carlo-based approximation of the expectation.
-#' 
-#' 
+#'
+#'
 #' @return A \code{list} containing the following named elements:
 #' \itemize{
-#'   \item{scale1}{scale1}
-#'   \item{diff_from_target1}{diff_from_target1}
-#'   \item{iter1}{iter1}
-#'   \item{prior_num1}{prior_num1}
-#'   \item{scale2}{scale2}
-#'   \item{diff_from_target2}{diff_from_target2}
-#'   \item{iter2}{iter2}
-#'   \item{prior_num2}{prior_num2}
+#'   \item{scale1}{}
+#'   \item{diff_from_target1}{}
+#'   \item{iter1}{}
+#'   \item{prior_num1}{}
+#'   \item{scale2}{}
+#'   \item{diff_from_target2}{}
+#'   \item{iter2}{}
+#'   \item{prior_num2}{}
 #' }
-#' 
+#'
 #'
 #' @export
 
@@ -98,10 +98,10 @@ solve_for_hiershrink_scale = function(target_mean1,
                                       n,
                                       sigma = 2,
                                       tol = .Machine$double.eps^0.5,
-                                      max_iter = 100, 
+                                      max_iter = 100,
                                       n_sim = 2e5
 ) {
-  
+
   npar = npar1 + npar2;
   stopifnot(isTRUE(all.equal(npar%%1,0)));#Ensure integers
   do_local = (local_dof > 0);
@@ -128,7 +128,7 @@ solve_for_hiershrink_scale = function(target_mean1,
       lambda[,(npar1+1):(npar1+npar2)] = lambda[,(npar1+1):(npar1+npar2),drop=F] * tau;
     }
     rm(tau);
-  } 
+  }
   if(is.na(target_mean2)) {
     npar1 = npar;
   }
@@ -156,7 +156,7 @@ solve_for_hiershrink_scale = function(target_mean1,
   diff1 = abs(diff_target[i]);
   iter1 = i;
   prior_num1 = diff_target[i] + target_mean1;
-  
+
   if(!is.na(target_mean2)) {
     stopifnot(target_mean2 > 0 && target_mean2 < npar2);
     log_scale2 = diff_target = numeric(max_iter);
@@ -188,7 +188,7 @@ solve_for_hiershrink_scale = function(target_mean1,
     iter2 = NA;
     prior_num2 = NA;
   }
-  
+
   return(list(scale1 = scale1,
               diff_from_target1 = diff1,
               iter1 = iter1,

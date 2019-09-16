@@ -126,7 +126,6 @@ create_projection = function(x_curr_orig,
 #'
 #' Helper function to 1/(1+exp(-x))
 #'
-#' @export
 expit = function(x) { 1/(1+exp(-x));}
 
 
@@ -135,7 +134,6 @@ expit = function(x) { 1/(1+exp(-x));}
 #'
 #' Helper function to log(x/(1-x))
 #'
-#' @export
 logit = function(x) { log(x/(1-x));}
 
 
@@ -146,7 +144,6 @@ logit = function(x) { log(x/(1-x));}
 #'
 #' Borrowed from the R package simsalapar
 #'
-#' @export
 tryCatch.W.E <- function(expr)
 {
   W <- NULL
@@ -167,8 +164,6 @@ tryCatch.W.E <- function(expr)
 #'
 #' Helper function
 #'
-#' @export
-
 as.dummy = function(x,full_rank=T) {
   single.as.dummy <- function(x,full_rank) {
     levels_x = levels(x);

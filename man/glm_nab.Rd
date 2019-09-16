@@ -86,10 +86,6 @@ this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro}
 \item{ntries}{(pos. integer) the stan function will run up to this many times,
 stopping either when the number of divergent transitions* is zero or when ntries
 has been reached. The reported fit will be that with the fewest number of divergent iterations.}
-
-\item{eigendecomp_hist_var}{fill}
-
-\item{scale_to_variance225}{fill}
 }
 \value{
 \code{list} object containing the draws and other information.
