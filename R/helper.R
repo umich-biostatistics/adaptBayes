@@ -1,50 +1,4 @@
 
-#DESCRIPTION: self-explanatory
-expit = function(x) { 1/(1+exp(-x));}
-logit = function(x) { log(x/(1-x));}
-
-#DESCRIPTION: Error-handling function
-#Borrowed from the R package simsalapar
-#https://www.rdocumentation.org/packages/simsalapar/versions/1.0-9/topics/tryCatch.W.E
-tryCatch.W.E <- function(expr)
-{
-  W <- NULL
-  w.handler <- function(w){ # warning handler
-    W <<- c(W,w)
-    invokeRestart("muffleWarning")
-  }
-  list(value = withCallingHandlers(tryCatch(expr, error = function(e) e),
-                                   warning = w.handler),
-       warning = W)
-}
-
-#DESCRIPTION: Helper function to make projection matrix (or list of projection matrices), which is P in the notation
-#of Boonstra and Barbaro
-#
-#VALUE: A list as long as the the length of imputes_list, with each element containing a different projection matrix
-#using the indices of the imputations specified in the corresponding element of imputes_list.
-#
-#ARGUMENTS:
-#
-#x_curr_orig, x_curr_aug (matrices) matrices with equal numbers of rows and p & q columns,
-#respectively. These are used to estimate the joint association between the original
-#and augmented covariates, which is needed for the imputation model
-#
-#eigenvec_hist_var (matrix) pxp matrix with each row corresponding to an eigenvector.
-#This is v_0 in Boonstra and Barbaro.
-#
-#imputes_list (list) list of length-2 vectors, with each vector containing the lower and upper indices of the imputations to use
-#for a projection matrix in the SAB method. This is best explained with an example: if imputes_list = list(c(1,15),c(16,100),c(1,100)),
-#then three projection matrices will be returned. One will be based upon the first 15 imputations from a run of MICE, the second based upon
-#the last 85 imputations from that same run (i.e. the 16th-100th imputations), and the third will be based upon all 100 imputations from this
-#same run. This is coded as such to allow for flexible exploration of the impact of number of imputations or variability due to imputations.
-#
-#seed_start (pos. integer) random seed to start each imputation
-#
-#predictorMatrix: (matrix) (p+q)x(p+q) matrix equivalent to argument of the same name in
-#in the 'mice()' function (type '?mice'). It is specially calculated based upon a monotone
-#missingness pattern (x^o is fully observed, x^a is not) Thus it samples from
-#[X^a_{1...q}|X^o] = [X^a_1|X^o]*[X^a_2|X^o,X^a_1]*...
 
 #' Projection matrix (or list of projection matrices)
 #'
@@ -67,7 +21,7 @@ tryCatch.W.E <- function(expr)
 #' in the SAB method. This is best explained with an example: if
 #' imputes_list = list(c(1,15),c(16,100),c(1,100)), then three projection matrices
 #' will be returned. One will be based upon the first 15 imputations from a run of
-#' MICE, the second based upon the last 85 imputations from that same run (i.e. the 16th-100th
+#' MICE, the second based upon the last 85 imputations from that same run (i.e. the 16th to100th
 #' imputations), and the third will be based upon all 100 imputations from this same run.
 #' This is coded as such to allow for flexible exploration of the impact of number of
 #' imputations or variability due to imputations.
@@ -75,7 +29,7 @@ tryCatch.W.E <- function(expr)
 #' @param predictorMatrix (matrix) (p+q)x(p+q) matrix equivalent to argument of the
 #' same name in in the 'mice()' function (type '?mice'). It is specially calculated
 #' based upon a monotone missingness pattern (x^o is fully observed, x^a is not) Thus
-#' it samples from [X^a_{1...q}|X^o] = [X^a_1|X^o]\*[X^a_2|X^o,X^a_1]\*...
+#' it samples from
 #'
 #'
 #'
@@ -165,7 +119,56 @@ create_projection = function(x_curr_orig,
   projections;
 }
 
-# Is this ever used?
+
+
+#' expit
+#'
+#'
+#' Helper function to 1/(1+exp(-x))
+#'
+#' @export
+expit = function(x) { 1/(1+exp(-x));}
+
+
+#' logit
+#'
+#'
+#' Helper function to log(x/(1-x))
+#'
+#' @export
+logit = function(x) { log(x/(1-x));}
+
+
+
+
+#' Error-handling function
+#'
+#'
+#' Borrowed from the R package simsalapar
+#'
+#' @export
+tryCatch.W.E <- function(expr)
+{
+  W <- NULL
+  w.handler <- function(w){ # warning handler
+    W <<- c(W,w)
+    invokeRestart("muffleWarning")
+  }
+  list(value = withCallingHandlers(tryCatch(expr, error = function(e) e),
+                                   warning = w.handler),
+       warning = W)
+}
+
+
+
+
+#' as.dummy
+#'
+#'
+#' Helper function
+#'
+#' @export
+
 as.dummy = function(x,full_rank=T) {
   single.as.dummy <- function(x,full_rank) {
     levels_x = levels(x);

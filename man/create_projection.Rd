@@ -25,7 +25,7 @@ the lower and upper indices of the imputations to use for a projection matrix
 in the SAB method. This is best explained with an example: if
 imputes_list = list(c(1,15),c(16,100),c(1,100)), then three projection matrices
 will be returned. One will be based upon the first 15 imputations from a run of
-MICE, the second based upon the last 85 imputations from that same run (i.e. the 16th-100th
+MICE, the second based upon the last 85 imputations from that same run (i.e. the 16th to100th
 imputations), and the third will be based upon all 100 imputations from this same run.
 This is coded as such to allow for flexible exploration of the impact of number of
 imputations or variability due to imputations.}
@@ -35,7 +35,7 @@ imputations or variability due to imputations.}
 \item{predictorMatrix}{(matrix) (p+q)x(p+q) matrix equivalent to argument of the
 same name in in the 'mice()' function (type '?mice'). It is specially calculated
 based upon a monotone missingness pattern (x^o is fully observed, x^a is not) Thus
-it samples from \link{X^a_{1...q}|X^o} = \link{X^a_1|X^o}*\link{X^a_2|X^o,X^a_1}*...}
+it samples from}
 }
 \value{
 A list as long as the the length of imputes_list, with each element containing

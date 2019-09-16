@@ -56,7 +56,7 @@
 #'
 #' @export
 
-glm_studt = function(stan_fit = NA,
+glm_studt = function(stan_fit = stanmodels$RegStudT,
                      stan_path,
                      y = c(0,1),
                      x_standardized = matrix(0,length(y),3),

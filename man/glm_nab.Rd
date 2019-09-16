@@ -4,7 +4,7 @@
 \alias{glm_nab}
 \title{Fit GLM with the 'naive adaptive bayes' prior}
 \usage{
-glm_nab(stan_fit = NA, stan_path, y = c(0, 1),
+glm_nab(stan_fit = stanmodels$NAB_Stable, stan_path, y = c(0, 1),
   x_standardized = matrix(0, length(y), 6), alpha_prior_mean = rep(0,
   3), alpha_prior_cov = diag(1, 3), phi_mean = 0.5, phi_sd = 2.5,
   beta_orig_scale = 1, beta_aug_scale = 1, beta_aug_scale_tilde = 1,
@@ -40,9 +40,9 @@ historical analysis, corresponds to m_alpha in Boonstra and Barbaro}
 \item{alpha_prior_cov}{(matrix) pxp positive definite matrix giving the variance of
 alpha from the historical analysis, corresponds to S_alpha in Boonstra and Barbaro}
 
-\item{phi_mean}{(real) mean of phi corresponding to a normal distribution, support is truncated to \link{0,1}}
+\item{phi_mean}{(real) mean of phi corresponding to a normal distribution, support is truncated to [0,1]}
 
-\item{phi_sd}{(pos. real) sd of phi corresponding to a normal distribution, support is truncated to \link{0,1}}
+\item{phi_sd}{(pos. real) sd of phi corresponding to a normal distribution, support is truncated to [0,1]}
 
 \item{beta_orig_scale}{(pos. real) constants indicating the prior scale of the
 horseshoe. Both values correspond to 'c' in the notation of Boonstra and Barbaro,

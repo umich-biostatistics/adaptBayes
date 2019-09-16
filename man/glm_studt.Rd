@@ -4,7 +4,7 @@
 \alias{glm_studt}
 \title{Fit GLM with a regularized student-t prior regression coefficients}
 \usage{
-glm_studt(stan_fit = NA, stan_path, y = c(0, 1),
+glm_studt(stan_fit = stanmodels$RegStudT, stan_path, y = c(0, 1),
   x_standardized = matrix(0, length(y), 3), beta_scale = 1, dof = 1,
   slab_precision = (1/15)^2, only_prior = F, mc_warmup = 50,
   mc_iter_after_warmup = 50, mc_chains = 1, mc_thin = 1,

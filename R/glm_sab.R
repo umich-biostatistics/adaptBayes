@@ -75,7 +75,7 @@
 #' @import rstan
 #' @export
 
-glm_sab = function(stan_fit = NA,
+glm_sab = function(stan_fit = stanmodels$SAB_Stable,
                    stan_path,
                    y = c(0,1),
                    x_standardized = matrix(0,length(y),6),

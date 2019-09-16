@@ -4,8 +4,8 @@
 \alias{glm_standard}
 \title{GLM equipped with the 'standard' prior evaluated}
 \usage{
-glm_standard(stan_fit = NA, stan_path, y = c(0, 1),
-  x_standardized = matrix(0, length(y), 6), p = 3, q = 3,
+glm_standard(stan_fit = stanmodels$RegHS_stable, stan_path, y = c(0,
+  1), x_standardized = matrix(0, length(y), 6), p = 3, q = 3,
   beta_orig_scale = 1, beta_aug_scale = 1, local_dof = 1,
   global_dof = 1, slab_precision = (1/15)^2, intercept_offset = NULL,
   only_prior = F, mc_warmup = 50, mc_iter_after_warmup = 50,

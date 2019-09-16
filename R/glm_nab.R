@@ -82,7 +82,7 @@
 #'
 #' @export
 
-glm_nab = function(stan_fit = NA,
+glm_nab = function(stan_fit = stanmodels$NAB_Stable,
                    stan_path,
                    y = c(0,1),
                    x_standardized = matrix(0,length(y),6),
