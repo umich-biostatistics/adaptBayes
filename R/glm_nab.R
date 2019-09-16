@@ -73,8 +73,6 @@
 #' @param ntries (pos. integer) the stan function will run up to this many times,
 #' stopping either when the number of divergent transitions* is zero or when ntries
 #' has been reached. The reported fit will be that with the fewest number of divergent iterations.
-#' @param eigendecomp_hist_var fill
-#' @param scale_to_variance225 fill
 #'
 #' @return \code{list} object containing the draws and other information.
 #'
@@ -82,7 +80,7 @@
 #'
 #' @export
 
-glm_nab = function(stan_fit = NA,
+glm_nab = function(stan_fit = stanmodels$NAB_Stable,
                    stan_path,
                    y = c(0,1),
                    x_standardized = matrix(0,length(y),6),

@@ -30,7 +30,7 @@ is required, then leave npar2 = 0.}
 lambda_j and tau, respectively. Boonstra and Barbaro never considered
 local_dof != 1 or global_dof != 1.}
 
-\item{regional_dof}{(pos. integer) Not used in Boonstra and Barbaro. If}
+\item{regional_dof}{(pos. integer) Not used in Boonstra and Barbaro.}
 
 \item{global_dof}{(pos. integer) numbers indicating the degrees of freedom for
 lambda_j and tau, respectively. Boonstra and Barbaro never considered
@@ -42,7 +42,7 @@ this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro}
 \item{n}{(pos. integer) sample size}
 
 \item{sigma}{(pos. real) square root of the assumed dispersion. In Boonstra and
-Barbaro, this was always 2, corresponding to the maximum possible value: sqrt(1/\link{0.5 * (1 - 0.5)}).}
+Barbaro, this was always 2, corresponding to the maximum possible value: sqrt(1/[0.5 * (1 - 0.5)]).}
 
 \item{tol}{(pos. real) numerical tolerance for convergence of solution}
 
@@ -55,14 +55,14 @@ hyperpriors to calculate the Monte Carlo-based approximation of the expectation.
 \value{
 A \code{list} containing the following named elements:
 \itemize{
-\item{scale1}{scale1}
-\item{diff_from_target1}{diff_from_target1}
-\item{iter1}{iter1}
-\item{prior_num1}{prior_num1}
-\item{scale2}{scale2}
-\item{diff_from_target2}{diff_from_target2}
-\item{iter2}{iter2}
-\item{prior_num2}{prior_num2}
+  \item{scale1}{}
+  \item{diff_from_target1}{}
+  \item{iter1}{}
+  \item{prior_num1}{}
+  \item{scale2}{}
+  \item{diff_from_target2}{}
+  \item{iter2}{}
+  \item{prior_num2}{}
 }
 }
 \description{

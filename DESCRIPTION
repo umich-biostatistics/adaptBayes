@@ -1,16 +1,27 @@
 Package: adaptBayes
 Title: Adaptive Bayesian Updates
 Version: 1.0
-Authors@R: c(
-    person(given = "Phil", family = "Boonstra", role = c("aut"), email = "philb@umich.edu"),
+Authors@R: 
+    c(
+    person(given = "Philip", family = "Boonstra", role = c("aut"), email = "philb@umich.edu"),
     person(given = "Michael", family = "Kleinsasser", role = c("cre"), email = "mkleinsa@umich.edu"))
-Description: Core functions used in Boonstra, Philip S. and Barbaro, Ryan P., “Incorporating Historical 
-    Models with Adaptive Bayesian Updates” (2018) In Press at Biostatistics.
-    <doi:10.5281/zenodo.1404429>
-License: GPL-2
-Imports: rstan
+Description: R package for Boonstra, Philip S. and Barbaro, Ryan P., “Incorporating Historical Models with Adaptive Bayesian Updates” (2018) In Press at Biostatistics
+License: GPL-3
 Encoding: UTF-8
 LazyData: true
-BugReports: https://github.com/umich-biostatistics/adaptBayes/issues
-Roxygen: list(markdown = TRUE)
+Biarch: true
+Depends: 
+    R (>= 3.4.0)
+Imports: 
+    methods,
+    Rcpp (>= 0.12.0),
+    rstan (>= 2.18.1),
+    rstantools (>= 2.0.0.9000)
+LinkingTo: 
+    BH (>= 1.66.0),
+    Rcpp (>= 0.12.0),
+    RcppEigen (>= 0.3.3.3.0),
+    rstan (>= 2.18.1),
+    StanHeaders (>= 2.18.0)
+SystemRequirements: GNU make
 RoxygenNote: 6.1.1.9000

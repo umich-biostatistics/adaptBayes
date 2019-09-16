@@ -119,7 +119,7 @@
 #'
 #' @export
 
-glm_standard = function(stan_fit = NA,
+glm_standard = function(stan_fit = stanmodels$RegHS_stable,
                         stan_path,
                         y = c(0,1),
                         x_standardized = matrix(0,length(y),6),
