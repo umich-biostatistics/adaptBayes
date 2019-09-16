@@ -1,14 +1,12 @@
-Package: AdaptBayes
-Title: What the Package Does (One Line, Title Case)
-Version: 0.0.0.9000
+Package: adaptBayes
+Title: Adaptive Bayesian Updates
+Version: 1.0
 Authors@R: 
-    person(given = "First",
-           family = "Last",
-           role = c("aut", "cre"),
-           email = "first.last@example.com",
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
-License: What license it uses
+    c(
+    person(given = "Philip", family = "Boonstra", role = c("aut"), email = "philb@umich.edu"),
+    person(given = "Michael", family = "Kleinsasser", role = c("cre"), email = "mkleinsa@umich.edu"))
+Description: R package for Boonstra, Philip S. and Barbaro, Ryan P., “Incorporating Historical Models with Adaptive Bayesian Updates” (2018) In Press at Biostatistics
+License: GPL-3
 Encoding: UTF-8
 LazyData: true
 Biarch: true

@@ -1,12 +1,12 @@
-#' The 'AdaptBayes' package.
+#' The 'adaptBayes' package.
 #'
 #' @description R package for Boonstra, Philip S. and Barbaro, Ryan P.,
 #' “Incorporating Historical Models with Adaptive Bayesian Updates” (2018) In Press at Biostatistics
 #'
 #' @docType package
-#' @name AdaptBayes-package
-#' @aliases AdaptBayes
-#' @useDynLib AdaptBayes, .registration = TRUE
+#' @name adaptBayes-package
+#' @aliases adaptBayes
+#' @useDynLib adaptBayes, .registration = TRUE
 #' @import methods
 #' @import Rcpp
 #' @importFrom rstan sampling
