@@ -56,8 +56,8 @@
 #'
 #' @export
 
-glm_studt = function(stan_fit = stanmodels$RegStudT,
-                     stan_path,
+glm_studt = function(#stan_fit = stanmodels$RegStudT,
+                     #stan_path,
                      y = c(0,1),
                      x_standardized = matrix(0,length(y),3),
                      beta_scale = 1,
@@ -78,27 +78,27 @@ glm_studt = function(stan_fit = stanmodels$RegStudT,
   curr_try = 1;
 
   while(curr_try <= ntries) {
-    assign("curr_fit",tryCatch.W.E(stan(file = stan_path,
-                                        fit = stan_fit,
-                                        data = list(n_stan = length(y),
-                                                    p_stan = ncol(x_standardized),
-                                                    y_stan = y,
-                                                    x_standardized_stan = x_standardized,
-                                                    dof_stan = dof,
-                                                    beta_scale_stan = beta_scale,
-                                                    slab_precision_stan = slab_precision,
-                                                    only_prior = as.integer(only_prior)),
-                                        warmup = mc_warmup,
-                                        iter = mc_iter_after_warmup + mc_warmup,
-                                        chains = mc_chains,
-                                        thin = mc_thin,
-                                        control = list(stepsize = mc_stepsize,
-                                                       adapt_delta = mc_adapt_delta,
-                                                       max_treedepth = mc_max_treedepth))));
+    assign("curr_fit",tryCatch.W.E(sampling(#file = stan_path,
+                                           object = stanmodels$RegStudT,
+                                           data = list(n_stan = length(y),
+                                                       p_stan = ncol(x_standardized),
+                                                       y_stan = y,
+                                                       x_standardized_stan = x_standardized,
+                                                       dof_stan = dof,
+                                                       beta_scale_stan = beta_scale,
+                                                       slab_precision_stan = slab_precision,
+                                                       only_prior = as.integer(only_prior)),
+                                            warmup = mc_warmup,
+                                            iter = mc_iter_after_warmup + mc_warmup,
+                                            chains = mc_chains,
+                                            thin = mc_thin,
+                                            control = list(stepsize = mc_stepsize,
+                                                           adapt_delta = mc_adapt_delta,
+                                                           max_treedepth = mc_max_treedepth))));
     if("simpleError"%in%class(curr_fit$value) || "error"%in%class(curr_fit$value)) {
       stop(curr_fit$value);
     }
-    if(!"stanfit"%in%class(stan_fit)) {
+    if(!"stanfit"%in%class(stanmodels$RegStudT)) {
       break;
     }
     divergent_check = unlist(lapply(curr_fit$warning,grep,pattern="divergent transitions",value=T));
@@ -129,7 +129,7 @@ glm_studt = function(stan_fit = stanmodels$RegStudT,
       break;
     }
   }
-  if(!"stanfit"%in%class(stan_fit)) {
+  if(!"stanfit"%in%class(stanmodels$RegStudT)) {
     curr_fit$value;
   } else {
     list(accepted_divergences = accepted_divergences,

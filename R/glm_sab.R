@@ -73,8 +73,8 @@
 #' @import rstan
 #' @export
 
-glm_sab = function(stan_fit = stanmodels$SAB_Stable,
-                   stan_path,
+glm_sab = function(#stan_fit = stanmodels$SAB_Stable,
+                   #stan_path,
                    y = c(0,1),
                    x_standardized = matrix(0,length(y),6),
                    alpha_prior_mean = rep(0, 3),
@@ -123,39 +123,39 @@ glm_sab = function(stan_fit = stanmodels$SAB_Stable,
   curr_try = 1;
 
   while(curr_try <= ntries) {
-    assign("curr_fit",tryCatch.W.E(stan(file = stan_path,
-                                        fit = stan_fit,
-                                        data = list(n_stan = length(y),
-                                                    p_stan = p,
-                                                    q_stan = q,
-                                                    y_stan = y,
-                                                    x_standardized_stan = x_standardized,
-                                                    aug_projection_stan = aug_projection,
-                                                    alpha_prior_mean_stan = alpha_prior_mean,
-                                                    alpha_prior_cov_stan = alpha_prior_cov,
-                                                    sqrt_eigenval_hist_var_stan = sqrt_eigenval_hist_var,
-                                                    eigenvec_hist_var_stan = eigenvec_hist_var,
-                                                    local_dof_stan = local_dof,
-                                                    global_dof_stan = global_dof,
-                                                    beta_orig_scale_stan = beta_orig_scale,
-                                                    beta_aug_scale_stan = beta_aug_scale,
-                                                    slab_precision_stan = slab_precision,
-                                                    scale_to_variance225 = scale_to_variance225,
-                                                    phi_mean_stan = phi_mean,
-                                                    phi_sd_stan = phi_sd,
-                                                    only_prior = as.integer(only_prior)),
-                                        warmup = mc_warmup,
-                                        iter = mc_iter_after_warmup + mc_warmup,
-                                        chains = mc_chains,
-                                        thin = mc_thin,
-                                        control = list(stepsize = mc_stepsize,
-                                                       adapt_delta = mc_adapt_delta,
-                                                       max_treedepth = mc_max_treedepth))));
+    assign("curr_fit",tryCatch.W.E(sampling(#file = stan_path,
+                                            object = stanmodels$SAB_Stable,
+                                            data = list(n_stan = length(y),
+                                                        p_stan = p,
+                                                        q_stan = q,
+                                                        y_stan = y,
+                                                        x_standardized_stan = x_standardized,
+                                                        aug_projection_stan = aug_projection,
+                                                        alpha_prior_mean_stan = alpha_prior_mean,
+                                                        alpha_prior_cov_stan = alpha_prior_cov,
+                                                        sqrt_eigenval_hist_var_stan = sqrt_eigenval_hist_var,
+                                                        eigenvec_hist_var_stan = eigenvec_hist_var,
+                                                        local_dof_stan = local_dof,
+                                                        global_dof_stan = global_dof,
+                                                        beta_orig_scale_stan = beta_orig_scale,
+                                                        beta_aug_scale_stan = beta_aug_scale,
+                                                        slab_precision_stan = slab_precision,
+                                                        scale_to_variance225 = scale_to_variance225,
+                                                        phi_mean_stan = phi_mean,
+                                                        phi_sd_stan = phi_sd,
+                                                        only_prior = as.integer(only_prior)),
+                                           warmup = mc_warmup,
+                                           iter = mc_iter_after_warmup + mc_warmup,
+                                           chains = mc_chains,
+                                           thin = mc_thin,
+                                           control = list(stepsize = mc_stepsize,
+                                                          adapt_delta = mc_adapt_delta,
+                                                          max_treedepth = mc_max_treedepth))));
 
     if("simpleError"%in%class(curr_fit$value) || "error"%in%class(curr_fit$value)) {
       stop(curr_fit$value);
     }
-    if(!"stanfit"%in%class(stan_fit)) {
+    if(!"stanfit"%in%class(stanmodels$SAB_Stable)) {
       break;
     }
     divergent_check = unlist(lapply(curr_fit$warning,grep,pattern="divergent transitions",value=T));
@@ -189,7 +189,7 @@ glm_sab = function(stan_fit = stanmodels$SAB_Stable,
       break;
     }
   }
-  if(!"stanfit"%in%class(stan_fit)) {
+  if(!"stanfit"%in%class(stanmodels$SAB_Stable)) {
     curr_fit$value;
   } else {
     list(accepted_divergences = accepted_divergences,
