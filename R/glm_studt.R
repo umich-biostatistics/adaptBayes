@@ -56,7 +56,7 @@
 #'
 #' @export
 
-glm_studt = function(#stan_fit = stanmodels$RegStudT,
+glm_studt = function(stan_fit = stanmodels$RegStudT,
                      #stan_path,
                      y = c(0,1),
                      x_standardized = matrix(0,length(y),3),
@@ -79,7 +79,7 @@ glm_studt = function(#stan_fit = stanmodels$RegStudT,
 
   while(curr_try <= ntries) {
     assign("curr_fit",tryCatch.W.E(sampling(#file = stan_path,
-                                           object = stanmodels$RegStudT,
+                                           object = stan_fit,
                                            data = list(n_stan = length(y),
                                                        p_stan = ncol(x_standardized),
                                                        y_stan = y,
@@ -98,7 +98,7 @@ glm_studt = function(#stan_fit = stanmodels$RegStudT,
     if("simpleError"%in%class(curr_fit$value) || "error"%in%class(curr_fit$value)) {
       stop(curr_fit$value);
     }
-    if(!"stanfit"%in%class(stanmodels$RegStudT)) {
+    if(!"stanfit"%in%class(stan_fit)) {
       break;
     }
     divergent_check = unlist(lapply(curr_fit$warning,grep,pattern="divergent transitions",value=T));
@@ -129,7 +129,7 @@ glm_studt = function(#stan_fit = stanmodels$RegStudT,
       break;
     }
   }
-  if(!"stanfit"%in%class(stanmodels$RegStudT)) {
+  if(!"stanfit"%in%class(stan_fit)) {
     curr_fit$value;
   } else {
     list(accepted_divergences = accepted_divergences,

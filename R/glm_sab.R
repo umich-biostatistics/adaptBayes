@@ -73,7 +73,7 @@
 #' @import rstan
 #' @export
 
-glm_sab = function(#stan_fit = stanmodels$SAB_Stable,
+glm_sab = function(stan_fit = stanmodels$SAB_Stable,
                    #stan_path,
                    y = c(0,1),
                    x_standardized = matrix(0,length(y),6),
@@ -124,7 +124,7 @@ glm_sab = function(#stan_fit = stanmodels$SAB_Stable,
 
   while(curr_try <= ntries) {
     assign("curr_fit",tryCatch.W.E(sampling(#file = stan_path,
-                                            object = stanmodels$SAB_Stable,
+                                            object = stan_fit,
                                             data = list(n_stan = length(y),
                                                         p_stan = p,
                                                         q_stan = q,
@@ -155,7 +155,7 @@ glm_sab = function(#stan_fit = stanmodels$SAB_Stable,
     if("simpleError"%in%class(curr_fit$value) || "error"%in%class(curr_fit$value)) {
       stop(curr_fit$value);
     }
-    if(!"stanfit"%in%class(stanmodels$SAB_Stable)) {
+    if(!"stanfit"%in%class(stan_fit)) {
       break;
     }
     divergent_check = unlist(lapply(curr_fit$warning,grep,pattern="divergent transitions",value=T));
@@ -189,7 +189,7 @@ glm_sab = function(#stan_fit = stanmodels$SAB_Stable,
       break;
     }
   }
-  if(!"stanfit"%in%class(stanmodels$SAB_Stable)) {
+  if(!"stanfit"%in%class(stan_fit)) {
     curr_fit$value;
   } else {
     list(accepted_divergences = accepted_divergences,
