@@ -1,16 +1,3 @@
-
-#DESCRIPTION: Program for fitting a GLM equipped with a regularized student-t prior on the regression coefficients,
-#parametrized using the normal-inverse-gamma distribution. The 'regularization' refers to the fact that the inverse-gamma
-#scale is has a finite upper bound that it smoothly approaches. This method was not used in the simulation study but was used
-#in the data analysis. Specifically, it corresponds to 'PedRESC2'.
-#
-#
-#ARGUMENTS: (only those distinct from glm_standard are discussed)
-#
-#beta_scale (pos. real) constants indicating the prior scale of the student-t prior.
-#
-#dof (pos. integer) degrees of freedom for the student-t prior
-
 #' Fit GLM with a regularized student-t prior regression coefficients
 #'
 #' Program for fitting a GLM equipped with a regularized student-t prior on the regression
@@ -21,9 +8,6 @@
 #'
 #' @param stan_fit an R object of class stanfit, which allows the function to run
 #' without recompiling the stan code.
-#' @param stan_path (character) a path pointing to a .stan file, which indicates
-#' the stan code to compile and run. If both stan_fit and stan_path are provided,
-#' stan_fit takes precedence.
 #' @param y (vector) outcomes corresponding to the type of glm desired. This should
 #' match whatever datatype is expected by the stan program.
 #' @param x_standardized (matrix) matrix of numeric values with number of rows equal
@@ -57,10 +41,9 @@
 #' @export
 
 glm_studt = function(stan_fit = stanmodels$RegStudT,
-                     #stan_path,
-                     y = c(0,1),
-                     x_standardized = matrix(0,length(y),3),
-                     beta_scale = 1,
+                     y,
+                     x_standardized,
+                     beta_scale,
                      dof = 1,
                      slab_precision = (1/15)^2,
                      only_prior = F,
@@ -78,8 +61,7 @@ glm_studt = function(stan_fit = stanmodels$RegStudT,
   curr_try = 1;
 
   while(curr_try <= ntries) {
-    assign("curr_fit",tryCatch.W.E(sampling(#file = stan_path,
-                                           object = stan_fit,
+    assign("curr_fit",tryCatch.W.E(sampling(object = stan_fit,
                                            data = list(n_stan = length(y),
                                                        p_stan = ncol(x_standardized),
                                                        y_stan = y,
@@ -101,19 +83,18 @@ glm_studt = function(stan_fit = stanmodels$RegStudT,
     if(!"stanfit"%in%class(stan_fit)) {
       break;
     }
-    divergent_check = unlist(lapply(curr_fit$warning,grep,pattern="divergent transitions",value=T));
+    curr_divergences = count_stan_divergences(curr_fit$value);
     rhat_check = max(summary(curr_fit$value)$summary[,"Rhat"],na.rm=T);
-    #Originally, the break conditions were baesd upon having both no divergent transitions as well as a max Rhat (i.e. gelman-rubin
-    #diagnostic) sufficiently close to 1. I subsequently changed the conditions to be based only upon the first, which is reflected
-    #by setting rhat = T immediately below.
+    # Originally, the break conditions were baesd upon having both no divergent
+    # transitions as well as a max Rhat (i.e. gelman-rubin diagnostic) sufficiently
+    # close to 1. I subsequently changed the conditions to be based only upon the
+    # first, which is reflected by setting rhat = T immediately below.
     break_conditions = c(divergence = F, rhat = T);
-    if(length(divergent_check) == 0) {#corresponds to zero divergent transitions
-      curr_divergences = 0;
-      max_divergences = max(max_divergences,curr_divergences,na.rm=T);
+    if(curr_divergences == 0) {
+      max_divergences = 0;
       break_conditions["divergence"] = T;
-    } else {#corresponds to > zero divergent transitions
-      curr_divergences <- max(as.numeric(strsplit(divergent_check," ")$message),na.rm=T);
-      max_divergences = max(max_divergences,curr_divergences,na.rm=T);
+    } else {
+      max_divergences = max(max_divergences, curr_divergences, na.rm = T);
       curr_try = curr_try + 1;
     }
     #update if fewer divergent transitions were found

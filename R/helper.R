@@ -1,5 +1,3 @@
-
-
 #' Projection matrix (or list of projection matrices)
 #'
 #'
@@ -119,7 +117,24 @@ create_projection = function(x_curr_orig,
   projections;
 }
 
+#' Count the stan divergences
+#'
+#'
+#' Helper function to count the number of divergent transitions in a stanfit
+#' object
+#'
+#'
+#' @param stan_fit an R object of class stanfit
+#'
+#' @return The number of divergent transitions across all chains
+#'
+#' @export
 
+count_stan_divergences = function(stan_fit) {
+  foo = get_sampler_params(stan_fit, inc_warmup = FALSE);
+  n_draws = lapply(foo, nrow)[[1]];
+  sum(unlist(lapply(foo,"[",i = 1:n_draws, j = "divergent__")));
+}
 
 #' expit
 #'
@@ -158,48 +173,3 @@ tryCatch.W.E <- function(expr)
 
 
 
-
-#' as.dummy
-#'
-#'
-#' Helper function
-#'
-as.dummy = function(x,full_rank=T) {
-  single.as.dummy <- function(x,full_rank) {
-    levels_x = levels(x);
-    1*matrix(rep(x,nlevels(x)) == rep(levels_x,each=length(x)),nrow=length(x),ncol=nlevels(x),dimnames=list(NULL,levels_x))[,(1+full_rank):length(levels_x),drop=F];
-  }
-  if("factor"%in%class(x)) {
-    if(length(full_rank)>1) {warning("ignoring all but first element of 'full_rank'");}
-    result = single.as.dummy(x,full_rank[1]);
-  } else if("logical"%in%class(x)) {
-    if(length(full_rank)>1) {warning("ignoring all but first element of 'full_rank'");}
-    result = single.as.dummy(factor(x,levels=c(F,T)),full_rank[1]);
-  } else if("integer"%in%class(x)) {
-    if(length(full_rank)>1) {warning("ignoring all but first element of 'full_rank'");}
-    result = single.as.dummy(factor(x,levels=sort(unique(x),decreasing = T)),full_rank[1]);
-  } else if(class(x)=="data.frame") {
-    result = NULL;
-    full_rank = rep(full_rank,length=ncol(x));
-    for(i in 1:ncol(x)) {
-      if("factor"%in%class(x[,i])) {
-        foo = single.as.dummy(x[,i],full_rank[i]);
-        colnames(foo) = paste0(colnames(x)[i],colnames(foo));
-        result = cbind(result,foo);
-      } else if("logical"%in%class(x[,i])) {
-        foo = single.as.dummy(factor(x[,i],levels=c(F,T)),full_rank[i]);
-        colnames(foo) = paste0(colnames(x)[i],colnames(foo));
-        result = cbind(result,foo);
-      } else if("integer"%in%class(x[,i])) {
-        foo = single.as.dummy(factor(x[,i],levels=sort(unique(x[,i]),decreasing = T)),full_rank[i]);
-        colnames(foo) = paste0(colnames(x)[i],colnames(foo));
-        result = cbind(result,foo);
-      } else {
-        stop("x must be either a factor, logical, or a dataframe comprised of factors/logicals/integers");
-      }
-    }
-  } else {
-    stop("x must be either a factor, logical, or a dataframe comprised of factors/logicals/integers");
-  }
-  data.frame(result);
-}

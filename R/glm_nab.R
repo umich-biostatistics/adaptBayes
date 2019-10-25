@@ -1,23 +1,3 @@
-
-#DESCRIPTION: Program for fitting a GLM equipped with the 'naive adaptive bayes' prior evaluated in the manuscript
-#
-#
-#ARGUMENTS: (only those distinct from glm_standard are discussed)
-#
-#alpha_prior_mean (vector) p-length vector giving the mean of alpha from the historical analysis,
-#corresponds to m_alpha in Boonstra and Barbaro
-#
-#alpha_prior_cov (matrix) pxp positive definite matrix giving the variance of alpha from the historical
-#analysis, corresponds to S_alpha in Boonstra and Barbaro
-#
-#phi_mean (real) mean of phi corresponding to a normal distribution, support is truncated to [0,1]
-#
-#phi_sd (pos. real) sd of phi corresponding to a normal distribution, support is truncated to [0,1]
-#
-#beta_aug_scale_tilde (pos. real) constant indicating the prior scale of the horseshoe for the augmented
-#covariates when phi = 1, i.e. when the historical analysis is fully used. This corresponds to tilde_c in
-#Boonstra and Barbaro
-
 #' Fit GLM with the 'naive adaptive bayes' prior
 #'
 #' Program for fitting a GLM equipped with the 'naive adaptive bayes' prior evaluated
@@ -26,9 +6,6 @@
 #'
 #' @param stan_fit an R object of class stanfit, which allows the function to run
 #' without recompiling the stan code.
-#' @param stan_path (character) a path pointing to a .stan file, which indicates
-#' the stan code to compile and run. If both stan_fit and stan_path are provided,
-#' stan_fit takes precedence.
 #' @param y (vector) outcomes corresponding to the type of glm desired. This should
 #' match whatever datatype is expected by the stan program.
 #' @param x_standardized (matrix) matrix of numeric values with number of rows equal
@@ -43,11 +20,11 @@
 #' historical analysis, corresponds to m_alpha in Boonstra and Barbaro
 #' @param alpha_prior_cov (matrix) pxp positive definite matrix giving the variance of
 #' alpha from the historical analysis, corresponds to S_alpha in Boonstra and Barbaro
-#' @param phi_mean (real) mean of phi corresponding to a normal distribution, support is truncated to [0,1]
-#' @param phi_sd (pos. real) sd of phi corresponding to a normal distribution, support is truncated to [0,1]
-#' @param beta_orig_scale (pos. real) constants indicating the prior scale of the
-#' horseshoe. Both values correspond to 'c' in the notation of Boonstra and Barbaro,
-#' because that paper never considers beta_orig_scale!=beta_aug_scale
+#' @param phi_mean (real) mean of phi corresponding to a truncated normal distribution.
+#' Since the support of the distribution is truncated to [0,1], it would make sense,
+#' but is not required, that 'phi_mean' itself also be in [0,1]
+#' @param phi_sd (pos. real) sd of phi corresponding to a truncated normal distribution.
+#' @param beta_orig_scale,
 #' @param beta_aug_scale (pos. real) constants indicating the prior scale of the
 #' horseshoe. Both values correspond to 'c' in the notation of Boonstra and Barbaro,
 #' because that paper never considers beta_orig_scale!=beta_aug_scale
@@ -73,6 +50,12 @@
 #' @param ntries (pos. integer) the stan function will run up to this many times,
 #' stopping either when the number of divergent transitions* is zero or when ntries
 #' has been reached. The reported fit will be that with the fewest number of divergent iterations.
+#' @param eigendecomp_hist_var: R object of class 'eigen' containing a pxp matrix
+#' of eigenvectors in each row (equivalent to v_0 in Boonstra and Barbaro) and
+#' a p-length vector of eigenvalues. This is by default equal to eigen(alpha_prior_cov)
+#' @param scale_to_variance225: a vector assumed to be such that, when multiplied
+#' by the diagonal elements of alpha_prior_cov, the result is a vector of
+#' elements each equal to 225. This is explicitly calculated if it is not provided
 #'
 #' @return \code{list} object containing the draws and other information.
 #'
@@ -81,16 +64,15 @@
 #' @export
 
 glm_nab = function(stan_fit = stanmodels$NAB_Stable,
-                   #stan_path,
                    y,
-                   x_standardized = matrix(0,length(y),6),
-                   alpha_prior_mean = rep(0, 3),
-                   alpha_prior_cov = diag(1, 3),
-                   phi_mean = 0.5,
-                   phi_sd = 2.5,
-                   beta_orig_scale = 1,
-                   beta_aug_scale = 1,
-                   beta_aug_scale_tilde = 1,
+                   x_standardized,
+                   alpha_prior_mean,
+                   alpha_prior_cov,
+                   phi_mean,
+                   phi_sd,
+                   beta_orig_scale,
+                   beta_aug_scale,
+                   beta_aug_scale_tilde,
                    local_dof = 1,
                    global_dof = 1,
                    slab_precision = (1/15)^2,
@@ -130,8 +112,7 @@ glm_nab = function(stan_fit = stanmodels$NAB_Stable,
   curr_try = 1;
 
   while(curr_try <= ntries) {
-    assign("curr_fit",tryCatch.W.E(sampling(#file = stan_path,
-                                            object = stan_fit,
+    assign("curr_fit",tryCatch.W.E(sampling(object = stan_fit,
                                             data = list(n_stan = length(y),
                                                         p_stan = p,
                                                         q_stan = q,
@@ -165,19 +146,18 @@ glm_nab = function(stan_fit = stanmodels$NAB_Stable,
     if(!"stanfit"%in%class(stan_fit)) {
       break;
     }
-    divergent_check = unlist(lapply(curr_fit$warning,grep,pattern="divergent transitions",value=T));
+    curr_divergences = count_stan_divergences(curr_fit$value);
     rhat_check = max(summary(curr_fit$value)$summary[,"Rhat"],na.rm=T);
-    #Originally, the break conditions were baesd upon having both no divergent transitions as well as a max Rhat (i.e. gelman-rubin
-    #diagnostic) sufficiently close to 1. I subsequently changed the conditions to be based only upon the first, which is reflected
-    #by setting rhat = T immediately below.
+    # Originally, the break conditions were baesd upon having both no divergent
+    # transitions as well as a max Rhat (i.e. gelman-rubin diagnostic) sufficiently
+    # close to 1. I subsequently changed the conditions to be based only upon the
+    # first, which is reflected by setting rhat = T immediately below.
     break_conditions = c(divergence = F, rhat = T);
-    if(length(divergent_check) == 0) {#corresponds to zero divergent transitions
-      curr_divergences = 0;
-      max_divergences = max(max_divergences,curr_divergences,na.rm=T);
+    if(curr_divergences == 0) {
+      max_divergences = 0;
       break_conditions["divergence"] = T;
-    } else {#corresponds to > zero divergent transitions
-      curr_divergences <- max(as.numeric(strsplit(divergent_check," ")$message),na.rm=T);
-      max_divergences = max(max_divergences,curr_divergences,na.rm=T);
+    } else {
+      max_divergences = max(max_divergences, curr_divergences, na.rm = T);
       curr_try = curr_try + 1;
     }
     #update if fewer divergent transitions were found
