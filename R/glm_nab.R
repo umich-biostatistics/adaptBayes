@@ -37,7 +37,7 @@
 #' expects - in Boonstra and Barbaro, all predictors are marginally generated to have
 #' mean zero and unit variance, so no standardization is conducted. In practice,
 #' all data should be standardized to have a common scale before model fitting.
-#' If regression coefficients on the natural scale are desired, they be easily obtained
+#' If regression coefficients on the natural scale are desired, they can be easily obtained
 #' through unstandardizing.
 #' @param alpha_prior_mean (vector) p-length vector giving the mean of alpha from the
 #' historical analysis, corresponds to m_alpha in Boonstra and Barbaro
