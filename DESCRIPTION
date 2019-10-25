@@ -6,7 +6,7 @@ Authors@R:
     person(given = "Philip", family = "Boonstra", role = c("aut"), email = "philb@umich.edu"),
     person(given = "Michael", family = "Kleinsasser", role = c("cre"), email = "mkleinsa@umich.edu"))
 Description: R package for Boonstra, Philip S. and Barbaro, Ryan P., “Incorporating Historical Models with Adaptive Bayesian Updates” (2018) In Press at Biostatistics
-License: GPL-3
+License: MIT
 Encoding: UTF-8
 LazyData: true
 Biarch: true
