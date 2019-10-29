@@ -1,45 +1,10 @@
-
-
-#DESCRIPTION: This function calculates a numerical-based solution to the scale parameter c in the the equation three lines
-#from the top of page 7 in Section 2 of Boonstra and Barbaro. If desired, the user may request regional scale values
-#for a partition of the covariates into two regions, defined by the first npar1 covariates and the second npar2 covariates.
-#This functionality was not used in Boonstra and Barbaro.
-#
-#
-#ARGUMENTS:
-#target_mean1, target_mean2 (pos. reals): the desired prior number of effective parameters (tilde xi_eff in Boonstra and Barbaro).
-#If one scale parameter is desired, leave target_mean2 = NA. An error will be thrown if target_mean1 > npar1 or if
-#target_mean2 > npar2.
-#
-#npar1, npar2 (pos. integers): the number of covariates. If one scale parameter is required, then leave npar2 = 0.
-#
-#local_dof, global_dof (pos. integer) numbers indicating the degrees of freedom for lambda_j and tau, respectively. Boonstra
-#and Barbaro never considered local_dof != 1 or global_dof != 1.
-#
-#regional_dof (pos. integer) Not used in Boonstra and Barbaro. If
-#
-#n (pos. integer) sample size
-#
-#sigma (pos. real) square root of the assumed dispersion. In Boonstra and Barbaro, this was always 2, corresponding to the
-#maximum possible value: sqrt(1/[0.5 * (1 - 0.5)]).
-#
-#tol (pos. real) numerical tolerance for convergence of solution
-#
-#max_iter (pos. integer) maximum number of iterations to run without convergence before giving up
-#
-#n_sim (pos. integer) number of simulated draws from the underlying student-t hyperpriors to calculate the Monte Carlo-based
-#approximation of the expectation.
-#
-#slab_precision (pos. real) the slab-part of the regularized horseshoe, this is equivalent to (1/d)^2 in the notation of
-#Boonstra and Barbaro
-
 #' Numerical-based solution to the scale parameter c
 #'
 #' This function calculates a numerical-based solution to the scale parameter c in
 #' the the equation three lines from the top of page 7 in Section 2 of Boonstra and
 #' Barbaro. If desired, the user may request regional scale values for a partition
 #' of the covariates into two regions, defined by the first npar1 covariates and the
-#' second npar2 covariates. This functionality was not used in Boonstra and Barbaro.
+#' second npar2 covariates, but this functionality was not used in Boonstra and Barbaro.
 #'
 #' @param target_mean1 (pos. reals): the desired prior number of effective parameters
 #' (tilde xi_eff in Boonstra and Barbaro). If one scale parameter is desired, leave
@@ -64,7 +29,8 @@
 #' this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro
 #' @param n (pos. integer) sample size
 #' @param sigma (pos. real) square root of the assumed dispersion. In Boonstra and
-#' Barbaro, this was always 2, corresponding to the maximum possible value: sqrt(1/[0.5 * (1 - 0.5)]).
+#' Barbaro, this was always 2, corresponding to the maximum possible value:
+#' sqrt(1/[0.5 * (1 - 0.5)]).
 #' @param tol (pos. real) numerical tolerance for convergence of solution
 #' @param max_iter (pos. integer) maximum number of iterations to run without
 #' convergence before giving up
