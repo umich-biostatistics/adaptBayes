@@ -13,5 +13,7 @@ library(adaptBayes)
 ### Current Suggested Citation
 
 Boonstra, Philip S. and Barbaro, Ryan P., "Incorporating Historical Models
-with Adaptive Bayesian Updates" (2018) https://doi.org/10.1093/biostatistics/kxy053
+with Adaptive Bayesian Updates" (2018) *Biostatistics* 
+https://doi.org/10.1093/biostatistics/kxy053
 
+<a href="https://biostats.bepress.com/umichbiostat/paper124">Authors' Copy </a>
