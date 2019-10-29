@@ -29,7 +29,8 @@
 #' this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro
 #' @param n (pos. integer) sample size
 #' @param sigma (pos. real) square root of the assumed dispersion. In Boonstra and
-#' Barbaro, this was always 2, corresponding to the maximum possible value: sqrt(1/[0.5 * (1 - 0.5)]).
+#' Barbaro, this was always 2, corresponding to the maximum possible value:
+#' sqrt(1/[0.5 * (1 - 0.5)]).
 #' @param tol (pos. real) numerical tolerance for convergence of solution
 #' @param max_iter (pos. integer) maximum number of iterations to run without
 #' convergence before giving up

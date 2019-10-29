@@ -50,6 +50,8 @@
 #' @param ntries (pos. integer) the stan function will run up to this many times,
 #' stopping either when the number of divergent transitions* is zero or when ntries
 #' has been reached. The reported fit will be that with the fewest number of divergent iterations.
+#' @param return_as_stanfit (logical) should the function return the stanfit
+#' object asis or should a summary of stanfit be returned as a regular list
 #' @param eigendecomp_hist_var: R object of class 'eigen' containing a pxp matrix
 #' of eigenvectors in each row (equivalent to v_0 in Boonstra and Barbaro) and
 #' a p-length vector of eigenvalues. This is by default equal to eigen(alpha_prior_cov)
@@ -85,6 +87,7 @@ glm_nab = function(stan_fit = stanmodels$NAB_Stable,
                    mc_adapt_delta = 0.9,
                    mc_max_treedepth = 15,
                    ntries = 1,
+                   return_as_stanfit = FALSE,
                    eigendecomp_hist_var = NULL,
                    scale_to_variance225 = NULL
 ) {
@@ -176,7 +179,7 @@ glm_nab = function(stan_fit = stanmodels$NAB_Stable,
       break;
     }
   }
-  if(!"stanfit"%in%class(stan_fit)) {
+  if(return_as_stanfit) {
     curr_fit$value;
   } else {
     list(accepted_divergences = accepted_divergences,

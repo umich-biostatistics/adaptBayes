@@ -33,6 +33,8 @@
 #' @param ntries (pos. integer) the stan function will run up to this many times,
 #' stopping either when the number of divergent transitions* is zero or when ntries
 #' has been reached. The reported fit will be that with the fewest number of divergent iterations.
+#' @param return_as_stanfit (logical) should the function return the stanfit
+#' object asis or should a summary of stanfit be returned as a regular list
 #'
 #' @return \code{list} object containing the draws and other information.
 #'
@@ -54,7 +56,8 @@ glm_studt = function(stan_fit = stanmodels$RegStudT,
                      mc_stepsize = 0.1,
                      mc_adapt_delta = 0.9,
                      mc_max_treedepth = 15,
-                     ntries = 1) {
+                     ntries = 1,
+                     return_as_stanfit = FALSE) {
 
   max_divergences = -Inf;
   accepted_divergences = Inf;
@@ -110,7 +113,7 @@ glm_studt = function(stan_fit = stanmodels$RegStudT,
       break;
     }
   }
-  if(!"stanfit"%in%class(stan_fit)) {
+  if(return_as_stanfit) {
     curr_fit$value;
   } else {
     list(accepted_divergences = accepted_divergences,
