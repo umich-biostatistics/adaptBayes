@@ -16,7 +16,7 @@ See the companion repository at https://www.github.com/psboonstra/AdaptiveBayesi
 
 STAN is smart enough to recognize the need for the normalizing constant and so, upon initial installation of the package, the compiler will throw the following warning (once for each of the stan files):
 
-<code>
+```r
 DIAGNOSTIC(S) FROM PARSER:
 Warning (non-fatal):
 Left-hand side of sampling statement (~) may contain a
@@ -26,7 +26,7 @@ the log absolute determinant of the Jacobian of the
 transform.
 Left-hand-side of sampling statement:
     normalized_beta ~ normal(...)
-</code>
+```
 
 This warning can be safely ignored because we do, in fact, calculate the normalizing constant
 
