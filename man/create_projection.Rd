@@ -4,9 +4,14 @@
 \alias{create_projection}
 \title{Projection matrix (or list of projection matrices)}
 \usage{
-create_projection(x_curr_orig, x_curr_aug, eigenvec_hist_var,
+create_projection(
+  x_curr_orig,
+  x_curr_aug,
+  eigenvec_hist_var,
   imputes_list = list(c(1, 15)),
-  seed_start = sample(.Machine$integer.max, 1), predictorMatrix = NULL)
+  seed_start = sample(.Machine$integer.max, 1),
+  predictorMatrix = NULL
+)
 }
 \arguments{
 \item{x_curr_orig}{(matrices) matrices with equal numbers of rows and p & q columns,

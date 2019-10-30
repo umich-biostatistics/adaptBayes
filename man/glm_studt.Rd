@@ -4,20 +4,28 @@
 \alias{glm_studt}
 \title{Fit GLM with a regularized student-t prior regression coefficients}
 \usage{
-glm_studt(stan_fit = stanmodels$RegStudT, stan_path, y = c(0, 1),
-  x_standardized = matrix(0, length(y), 3), beta_scale = 1, dof = 1,
-  slab_precision = (1/15)^2, only_prior = F, mc_warmup = 50,
-  mc_iter_after_warmup = 50, mc_chains = 1, mc_thin = 1,
-  mc_stepsize = 0.1, mc_adapt_delta = 0.9, mc_max_treedepth = 15,
-  ntries = 1)
+glm_studt(
+  stan_fit = stanmodels$RegStudT,
+  y,
+  x_standardized,
+  beta_scale,
+  dof = 1,
+  slab_precision = (1/15)^2,
+  only_prior = F,
+  mc_warmup = 50,
+  mc_iter_after_warmup = 50,
+  mc_chains = 1,
+  mc_thin = 1,
+  mc_stepsize = 0.1,
+  mc_adapt_delta = 0.9,
+  mc_max_treedepth = 15,
+  ntries = 1,
+  return_as_stanfit = FALSE
+)
 }
 \arguments{
 \item{stan_fit}{an R object of class stanfit, which allows the function to run
 without recompiling the stan code.}
-
-\item{stan_path}{(character) a path pointing to a .stan file, which indicates
-the stan code to compile and run. If both stan_fit and stan_path are provided,
-stan_fit takes precedence.}
 
 \item{y}{(vector) outcomes corresponding to the type of glm desired. This should
 match whatever datatype is expected by the stan program.}
@@ -57,6 +65,9 @@ this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro}
 \item{ntries}{(pos. integer) the stan function will run up to this many times,
 stopping either when the number of divergent transitions* is zero or when ntries
 has been reached. The reported fit will be that with the fewest number of divergent iterations.}
+
+\item{return_as_stanfit}{(logical) should the function return the stanfit
+object asis or should a summary of stanfit be returned as a regular list}
 }
 \value{
 \code{list} object containing the draws and other information.

@@ -4,10 +4,21 @@
 \alias{calculate_m_eff}
 \title{Compute inverse of 'solve_for_hiershrink_scale'}
 \usage{
-calculate_m_eff(scale1, scale2 = NA, npar1, npar2 = 0, local_dof = 1,
-  regional_dof = -Inf, global_dof = 1, slab_precision = (1/15)^2, n,
-  sigma = 2, tol = .Machine$double.eps^0.5, max_iter = 100,
-  n_sim = 2e+05)
+calculate_m_eff(
+  scale1,
+  scale2 = NA,
+  npar1,
+  npar2 = 0,
+  local_dof = 1,
+  regional_dof = -Inf,
+  global_dof = 1,
+  slab_precision = (1/15)^2,
+  n,
+  sigma = 2,
+  tol = .Machine$double.eps^0.5,
+  max_iter = 100,
+  n_sim = 2e+05
+)
 }
 \arguments{
 \item{scale1}{global (if scale2=NA) or regional scale parameter value 1}
