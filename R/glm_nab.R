@@ -146,7 +146,7 @@ glm_nab = function(stan_fit = stanmodels$NAB_Stable,
     if("simpleError"%in%class(curr_fit$value) || "error"%in%class(curr_fit$value)) {
       stop(curr_fit$value);
     }
-    if(!"stanfit"%in%class(stan_fit)) {
+    if(return_as_stanfit) {
       break;
     }
     curr_divergences = count_stan_divergences(curr_fit$value);
