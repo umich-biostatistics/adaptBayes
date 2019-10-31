@@ -4,23 +4,37 @@
 \alias{glm_nab}
 \title{Fit GLM with the 'naive adaptive bayes' prior}
 \usage{
-glm_nab(stan_fit = stanmodels$NAB_Stable, stan_path, y = c(0, 1),
-  x_standardized = matrix(0, length(y), 6), alpha_prior_mean = rep(0,
-  3), alpha_prior_cov = diag(1, 3), phi_mean = 0.5, phi_sd = 2.5,
-  beta_orig_scale = 1, beta_aug_scale = 1, beta_aug_scale_tilde = 1,
-  local_dof = 1, global_dof = 1, slab_precision = (1/15)^2,
-  only_prior = F, mc_warmup = 50, mc_iter_after_warmup = 50,
-  mc_chains = 1, mc_thin = 1, mc_stepsize = 0.1,
-  mc_adapt_delta = 0.9, mc_max_treedepth = 15, ntries = 1,
-  eigendecomp_hist_var = NULL, scale_to_variance225 = NULL)
+glm_nab(
+  stan_fit = stanmodels$NAB_Stable,
+  y,
+  x_standardized,
+  alpha_prior_mean,
+  alpha_prior_cov,
+  phi_mean,
+  phi_sd,
+  beta_orig_scale,
+  beta_aug_scale,
+  beta_aug_scale_tilde,
+  local_dof = 1,
+  global_dof = 1,
+  slab_precision = (1/15)^2,
+  only_prior = F,
+  mc_warmup = 50,
+  mc_iter_after_warmup = 50,
+  mc_chains = 1,
+  mc_thin = 1,
+  mc_stepsize = 0.1,
+  mc_adapt_delta = 0.9,
+  mc_max_treedepth = 15,
+  ntries = 1,
+  return_as_stanfit = FALSE,
+  eigendecomp_hist_var = NULL,
+  scale_to_variance225 = NULL
+)
 }
 \arguments{
 \item{stan_fit}{an R object of class stanfit, which allows the function to run
 without recompiling the stan code.}
-
-\item{stan_path}{(character) a path pointing to a .stan file, which indicates
-the stan code to compile and run. If both stan_fit and stan_path are provided,
-stan_fit takes precedence.}
 
 \item{y}{(vector) outcomes corresponding to the type of glm desired. This should
 match whatever datatype is expected by the stan program.}
@@ -31,7 +45,7 @@ verification that each column is standardized to whatever scale the prior
 expects - in Boonstra and Barbaro, all predictors are marginally generated to have
 mean zero and unit variance, so no standardization is conducted. In practice,
 all data should be standardized to have a common scale before model fitting.
-If regression coefficients on the natural scale are desired, they be easily obtained
+If regression coefficients on the natural scale are desired, they can be easily obtained
 through unstandardizing.}
 
 \item{alpha_prior_mean}{(vector) p-length vector giving the mean of alpha from the
@@ -40,13 +54,11 @@ historical analysis, corresponds to m_alpha in Boonstra and Barbaro}
 \item{alpha_prior_cov}{(matrix) pxp positive definite matrix giving the variance of
 alpha from the historical analysis, corresponds to S_alpha in Boonstra and Barbaro}
 
-\item{phi_mean}{(real) mean of phi corresponding to a normal distribution, support is truncated to [0,1]}
+\item{phi_mean}{(real) mean of phi corresponding to a truncated normal distribution.
+Since the support of the distribution is truncated to [0,1], it would make sense,
+but is not required, that 'phi_mean' itself also be in [0,1]}
 
-\item{phi_sd}{(pos. real) sd of phi corresponding to a normal distribution, support is truncated to [0,1]}
-
-\item{beta_orig_scale}{(pos. real) constants indicating the prior scale of the
-horseshoe. Both values correspond to 'c' in the notation of Boonstra and Barbaro,
-because that paper never considers beta_orig_scale!=beta_aug_scale}
+\item{phi_sd}{(pos. real) sd of phi corresponding to a truncated normal distribution.}
 
 \item{beta_aug_scale}{(pos. real) constants indicating the prior scale of the
 horseshoe. Both values correspond to 'c' in the notation of Boonstra and Barbaro,
@@ -86,6 +98,17 @@ this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro}
 \item{ntries}{(pos. integer) the stan function will run up to this many times,
 stopping either when the number of divergent transitions* is zero or when ntries
 has been reached. The reported fit will be that with the fewest number of divergent iterations.}
+
+\item{return_as_stanfit}{(logical) should the function return the stanfit
+object asis or should a summary of stanfit be returned as a regular list}
+
+\item{eigendecomp_hist_var:}{R object of class 'eigen' containing a pxp matrix
+of eigenvectors in each row (equivalent to v_0 in Boonstra and Barbaro) and
+a p-length vector of eigenvalues. This is by default equal to eigen(alpha_prior_cov)}
+
+\item{scale_to_variance225:}{a vector assumed to be such that, when multiplied
+by the diagonal elements of alpha_prior_cov, the result is a vector of
+elements each equal to 225. This is explicitly calculated if it is not provided}
 }
 \value{
 \code{list} object containing the draws and other information.
