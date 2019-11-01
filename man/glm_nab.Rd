@@ -113,6 +113,14 @@ elements each equal to 225. This is explicitly calculated if it is not provided}
 \value{
 \code{list} object containing the draws and other information.
 
+
+}
+\description{
+Program for fitting a GLM equipped with the 'naive adaptive bayes' prior evaluated
+in the manuscript.
+}
+\examples{
+
 data(current)
 
 alpha_prior_cov = matrix(data = c(0.02936, -0.02078, 0.00216, -0.00637,
@@ -146,8 +154,5 @@ foo = glm_nab(y = current$y_curr,
               ntries = 2,
               eigendecomp_hist_var = eigendecomp_hist_var,
               scale_to_variance225 = scale_to_variance225);
-}
-\description{
-Program for fitting a GLM equipped with the 'naive adaptive bayes' prior evaluated
-in the manuscript.
+
 }
