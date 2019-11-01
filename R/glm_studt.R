@@ -38,6 +38,43 @@
 #'
 #' @return \code{list} object containing the draws and other information.
 #'
+#' @examples
+#'
+#'
+#'     data(historical)
+#'
+#'     foo = glm_studt(y = historical$y_hist,
+#'                     x_standardized = historical[,2:5],
+#'                     beta_scale = 0.0231,
+#'                     dof = 1,
+#'                     slab_precision = 0.00444,
+#'                     only_prior = 0,
+#'                     mc_warmup = 1000,
+#'                     mc_iter_after_warmup = 1000,
+#'                     mc_chains = 2,
+#'                     mc_thin = 1,
+#'                     mc_stepsize = 0.1,
+#'                     mc_adapt_delta = 0.99,
+#'                     mc_max_treedepth = 15,
+#'                     ntries = 2);
+#'
+#'     data(current)
+#'
+#'     foo = glm_studt(y = current$y_curr,
+#'                     x_standardized = current[,2:11],
+#'                     beta_scale = 0.0231,
+#'                     dof = 1,
+#'                     slab_precision = 0.00444,
+#'                     only_prior = 0,
+#'                     mc_warmup = 1000,
+#'                     mc_iter_after_warmup = 1000,
+#'                     mc_chains = 2,
+#'                     mc_thin = 1,
+#'                     mc_stepsize = 0.1,
+#'                     mc_adapt_delta = 0.99,
+#'                     mc_max_treedepth = 15,
+#'                     ntries = 2);
+#'
 #' @import rstan
 #'
 #' @export
