@@ -16,7 +16,7 @@ A companion repository for this package exists at
 https://www.github.com/psboonstra/AdaptiveBayesianUpdates, 
 which contains a vignette (`vignette.pdf`) on using the adaptive priors in this 
 package as well as code for running the simulation studies in Boonstra and 
-Barbaro (2018). 
+Barbaro (2020). 
 
 ### Compilation warning
 
@@ -56,7 +56,7 @@ http://discourse.mc-stan.org/t/very-mysterious-debug-error-when-running-rstanarm
 ### Current Suggested Citation
 
 Boonstra, Philip S. and Barbaro, Ryan P., "Incorporating Historical Models
-with Adaptive Bayesian Updates" (2018) *Biostatistics* 
+with Adaptive Bayesian Updates" (2020) *Biostatistics* 21, e47--e64
 https://doi.org/10.1093/biostatistics/kxy053
 
 <a href="https://biostats.bepress.com/umichbiostat/paper124">Authors' Copy </a>
