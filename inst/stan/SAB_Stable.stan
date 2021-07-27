@@ -13,10 +13,10 @@ data {
   real<lower = 0> local_dof_stan; // dof of pi(lambda), = 1
   real<lower = 0> global_dof_stan; // dof of pi(tau), = 1
   real<lower = 0> beta_orig_scale_stan; // c, Section 2
-  real<lower = 0> beta_aug_scale_stan; // c, Section 2 
+  real<lower = 0> beta_aug_scale_stan; // c, Section 2
   real<lower = 0> slab_precision_stan; // 1/d^2, Section 2
-  vector<lower = 0>[p_stan] scale_to_variance225; //Equation (S6); equal to diag(S_alpha) / 225; 
-  real<lower = 0, upper = 1> phi_mean_stan; // mean of phi in (0,1) using normal distribution truncated to [0,1]. 
+  vector<lower = 0>[p_stan] scale_to_variance225; //Equation (S6); equal to diag(S_alpha) / 225;
+  real<lower = 0, upper = 1> phi_mean_stan; // mean of phi in (0,1) using normal distribution truncated to [0,1].
   real<lower = 0> phi_sd_stan; // sd of phi using normal distribution truncated to [0,1]
   int<lower = 0,upper = 1> only_prior;//if 1, ignore the model and data and generate from the prior only
 }
@@ -26,8 +26,8 @@ transformed data {
 }
 parameters {
   real mu;
-  vector[p_stan] beta_raw_orig; // unscaled 
-  vector[q_stan] beta_raw_aug; // unscaled 
+  vector[p_stan] beta_raw_orig; // unscaled
+  vector[q_stan] beta_raw_aug; // unscaled
   real<lower = 0> eta;
   real<lower = 0> tau_glob; // tau
   vector<lower = 0>[p_stan] lambda_orig;// lambda^o
@@ -41,14 +41,14 @@ transformed parameters {
   vector[p_stan + q_stan] beta;
   vector<lower = 0,upper = sqrt(1/slab_precision_stan)>[p_stan] theta_orig;// theta
   vector<lower = 0,upper = sqrt(1/slab_precision_stan)>[q_stan] theta_aug;// theta
-  vector<lower = 0,upper = sqrt(1/min(scale_to_variance225))>[p_stan] hist_orig_scale;//Gamma in LHS of Eqn (S6)
+  vector<lower = 0>[p_stan] hist_orig_scale;//Diagonal of Gamma^{-1} in LHS of Eqn (S6)
   matrix[p_stan,p_stan] normalizing_cov;// S_alpha * hist_orig_scale  + Theta^o
   real<lower = 0, upper = 1> phi_copy;// copy of phi
   if(phi_sd_stan > 0) {
     phi_copy = phi;
   } else {
-    phi_copy = phi_mean_stan;  
-  } 
+    phi_copy = phi_mean_stan;
+  }
   theta_orig = 1 ./ sqrt(slab_precision_stan + ((1 - phi_copy) ./ (tau_glob^2 * square(lambda_orig))));
   theta_aug = 1 ./ sqrt(slab_precision_stan + (1 ./ (tau_glob^2 * square(lambda_aug))));
   beta_orig = theta_orig .* beta_raw_orig;
