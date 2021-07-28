@@ -1,17 +1,20 @@
 
-#' Add title
+#' Example data set
 #'
-#' Add description
+#' See function documentation for examples.
 #'
-#'
-#'
-#' @export
-"historical"
+#' @name historical
+#' @docType data
+#' @keywords data
+#' @example data()
+NULL
 
-#' Add title
+#' Example data set
 #'
-#' Add description
+#' See function documentation for examples.
 #'
-#'
-#' @export
-"current"
+#' @name current
+#' @docType data
+#' @keywords data
+#' @example data()
+NULL

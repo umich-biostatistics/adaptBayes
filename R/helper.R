@@ -43,7 +43,6 @@ create_projection = function(x_curr_orig,
                              imputes_list = list(c(1,15)),
                              seed_start = sample(.Machine$integer.max,1),
                              predictorMatrix = NULL) {
-  require(mice);
   require(magrittr);
   p = ncol(x_curr_orig);
   q = ncol(x_curr_aug);
@@ -82,7 +81,7 @@ create_projection = function(x_curr_orig,
 
   #Now impute the augmented covariates based upon the artificially created original covariates, i.e. the eigenvectors, using
   #the empiric associations in current data.
-  curr_impute = mice(rbind(x_all,
+  curr_impute = mice::mice(rbind(x_all,
                            #original covariates are constant across the different imputations, so we can just use the first
                            dat_for_marg[[1]][,c(orig_covariates,aug_covariates)]),
                      printFlag = F,

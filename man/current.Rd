@@ -3,12 +3,8 @@
 \docType{data}
 \name{current}
 \alias{current}
-\title{Add title}
-\format{An object of class \code{data.frame} with 100 rows and 11 columns.}
-\usage{
-current
-}
+\title{Example data set}
 \description{
-Add description
+See function documentation for examples.
 }
-\keyword{datasets}
+\keyword{data}

@@ -3,12 +3,8 @@
 \docType{data}
 \name{historical}
 \alias{historical}
-\title{Add title}
-\format{An object of class \code{data.frame} with 500 rows and 5 columns.}
-\usage{
-historical
-}
+\title{Example data set}
 \description{
-Add description
+See function documentation for examples.
 }
-\keyword{datasets}
+\keyword{data}
