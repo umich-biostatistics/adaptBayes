@@ -3,9 +3,6 @@
 #' Program for fitting a GLM equipped with the 'naive adaptive bayes' prior evaluated
 #' in the manuscript.
 #'
-#'
-#' @param stan_fit an R object of class stanfit, which allows the function to run
-#' without recompiling the stan code.
 #' @param y (vector) outcomes corresponding to the type of glm desired. This should
 #' match whatever datatype is expected by the stan program.
 #' @param x_standardized (matrix) matrix of numeric values with number of rows equal
@@ -16,27 +13,47 @@
 #' all data should be standardized to have a common scale before model fitting.
 #' If regression coefficients on the natural scale are desired, they can be easily obtained
 #' through unstandardizing.
+#' @param family (character) Similar to argument in `glm` with the same name, but
+#'  here this must be a character, and currently only 'binomial' (if y is binary) or
+#' 'gaussian' (if y is continuous) are valid choices.
 #' @param alpha_prior_mean (vector) p-length vector giving the mean of alpha from the
 #' historical analysis, corresponds to m_alpha in Boonstra and Barbaro
 #' @param alpha_prior_cov (matrix) pxp positive definite matrix giving the variance of
 #' alpha from the historical analysis, corresponds to S_alpha in Boonstra and Barbaro
-#' @param phi_mean (real) mean of phi corresponding to a truncated normal distribution.
-#' Since the support of the distribution is truncated to [0,1], it would make sense,
-#' but is not required, that 'phi_mean' itself also be in [0,1]
-#' @param phi_sd (pos. real) sd of phi corresponding to a truncated normal distribution.
+#' @param phi_dist (character) the name of the distribution to use as a prior on
+#' phi. This must be either 'trunc_norm' or 'beta'.
+#' @param phi_mean, @param phi_sd (real) prior mean and standard deviation of phi.
+#' At a minimum, phi_mean must be in [0,1] and phi_sd must be non-negative (you *can*
+#' choose phi_sd = 0, meaning that phi is identically equal to phi_mean).
+#' If 'phi_dist' is 'trunc_norm', then 'phi_mean' and 'phi_sd'
+#' are interpreted as the parameters of the *untruncated* normal distribution and so are not actually
+#' the parameters of the resulting distribution after truncating phi to the [0,1] interval.
+#' If 'phi_dist' is 'beta', then 'phi_mean' and 'phi_sd' are interpreted as the literal mean and
+#' standard deviation, from which the shape parameters are calculated. When 'phi_dist'
+#' is 'beta', not all choices of 'phi_mean' and 'phi_sd' are valid, e.g. the standard
+#' deviation of the beta distribution must be no greater than sqrt(phi_mean * (1 - phi_mean)).
+#' Also, the beta distribution is difficult to sample from if one or both of the
+#' shape parameters is much less than 1. An error will be thrown if an invalid parameterization
+#' is provided, and a warning will be thrown if a parameterization is provided
+#' that is likely to result in a "challenging" prior.
 #' @param beta_orig_scale,
 #' @param beta_aug_scale (pos. real) constants indicating the prior scale of the
-#' horseshoe. Both values correspond to 'c' in the notation of Boonstra and Barbaro,
-#' because that paper never considers beta_orig_scale!=beta_aug_scale
+#' horseshoe. Both values correspond to 'c / sigma' in the notation of Boonstra and Barbaro,
+#' because that paper never considers beta_orig_scale!=beta_aug_scale. Use
+#' the function `solve_for_hiershrink_scale` to calculate this quantity. If 'y'
+#' is binary, then sigma doesn't actually exist as a
+#' parameter, and it will be set equal to 2 inside the function.
+#' If 'y' is continuous, then sigma is equipped with its own weak
+#' prior. In either case, it is not intended that the user scale by sigma "manually".
 #' @param beta_aug_scale_tilde (pos. real) constant indicating the prior scale of
 #' the horseshoe for the augmented covariates when phi = 1, i.e. when the historical
 #' analysis is fully used. This corresponds to tilde_c in Boonstra and Barbaro
-#' @param local_dof (pos. integer) numbers indicating the degrees of freedom for
-#' lambda_j and tau, respectively. Boonstra, et al. never considered local_dof != 1
-#' or global_dof != 1.
-#' @param global_dof (pos. integer) numbers indicating the degrees of freedom for
-#' lambda_j and tau, respectively. Boonstra, et al. never considered local_dof != 1
-#' or global_dof != 1.
+#' @param local_dof (pos. integer) number indicating the degrees of freedom for
+#' lambda_j. Boonstra and Barbaro always used local_dof = 1. Choose a negative
+#' value to tell the function that there are no local hyperparameters.
+#' @param global_dof (pos. integer) number indicating the degrees of freedom for
+#' tau. Boonstra and Barbaro always used global_dof = 1. Choose a negative
+#' value to tell the function that there is no global hyperparameter.
 #' @param slab_precision (pos. real) the slab-part of the regularized horseshoe,
 #' this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro
 #' @param only_prior (logical) should all data be ignored, sampling only from the prior?
@@ -79,6 +96,7 @@
 #'               x_standardized = current[,2:11],
 #'               alpha_prior_mean = c(1.462, -1.660, 0.769, -0.756),
 #'               alpha_prior_cov = alpha_prior_cov,
+#'               phi_dist = "trunc_norm",
 #'               phi_mean = 1,
 #'               phi_sd = 0.25,
 #'               beta_orig_scale = 0.0223,
@@ -103,11 +121,12 @@
 #'
 #' @export
 
-glm_nab = function(stan_fit = stanmodels$NAB_Stable,
-                   y,
+glm_nab = function(y,
                    x_standardized,
+                   family = "binomial",
                    alpha_prior_mean,
                    alpha_prior_cov,
+                   phi_dist,
                    phi_mean,
                    phi_sd,
                    beta_orig_scale,
@@ -130,6 +149,10 @@ glm_nab = function(stan_fit = stanmodels$NAB_Stable,
                    scale_to_variance225 = NULL
 ) {
 
+  if(family != "gaussian" && family != "binomial") {
+    stop("'family' must equal 'gaussian' or 'binomial'")
+  }
+
   if(is.null(eigendecomp_hist_var)) {
     eigendecomp_hist_var = eigen(alpha_prior_cov);
   }
@@ -148,11 +171,43 @@ glm_nab = function(stan_fit = stanmodels$NAB_Stable,
     scale_to_variance225 = array(scale_to_variance225,dim=1);
   }
 
+  if(phi_mean < 0 || phi_mean > 1) {stop("'phi_mean' should be between 0 and 1")}
+  if(phi_sd < 0) {stop("'phi_sd' must be non-negative")}
+
+  if(phi_dist == "beta") {
+
+    sd_mean_fraction =
+      case_when(
+        # If phi_sd = 0, then phi equals phi_mean always (even for phi_mean = 1)
+        phi_sd == 0 ~ 0,
+        TRUE ~ phi_sd / sqrt(phi_mean * (1 - phi_mean)))
+    if(sd_mean_fraction >= 1) {
+      stop("'phi_sd' must be less than 'sqrt(phi_mean*(1-phi_mean))' to yield a valid beta distribution.")
+    } else if (sd_mean_fraction >= 0.85) {
+      warning("'phi_sd' may be too large relative to 'sqrt(phi_mean*(1-phi_mean))' to provide stable inference. Consider decreasing 'phi_sd' or moving 'phi_mean' closer to 0.5")
+    }
+
+  } else if(phi_dist != "trunc_norm") {
+    stop("'phi_dist' must equal 'trunc_norm' or 'beta'")
+  }
+
   max_divergences = -Inf;
   accepted_divergences = Inf;
   curr_try = 1;
 
+  # Mike:
+  # if family == "binomial", then I want to use the nab_binomial.stan program
+  # if family == "gaussian", then I want to use the nab_gaussian.stan program
+  # all of the other arguments can be left alone.
+
+  if(family == "binomial") {
+    stan_fit = stanmodels$nab_binomial;
+  } else {
+    stan_fit = stanmodels$nab_gaussian;
+  }
+
   while(curr_try <= ntries) {
+
     assign("curr_fit",tryCatch.W.E(sampling(object = stan_fit,
                                             data = list(n_stan = length(y),
                                                         p_stan = p,
@@ -170,6 +225,7 @@ glm_nab = function(stan_fit = stanmodels$NAB_Stable,
                                                         beta_aug_scale_tilde_stan = beta_aug_scale_tilde,
                                                         slab_precision_stan = slab_precision,
                                                         scale_to_variance225 = scale_to_variance225,
+                                                        phi_prior_type = ifelse(phi_dist == "trunc_norm", 1L, 0L),
                                                         phi_mean_stan = phi_mean,
                                                         phi_sd_stan = phi_sd,
                                                         only_prior = as.integer(only_prior)),

@@ -6,8 +6,6 @@
 #' it smoothly approaches. This method was not used in the simulation study but was
 #' used in the data analysis. Specifically, it corresponds to 'PedRESC2'.
 #'
-#' @param stan_fit an R object of class stanfit, which allows the function to run
-#' without recompiling the stan code.
 #' @param y (vector) outcomes corresponding to the type of glm desired. This should
 #' match whatever datatype is expected by the stan program.
 #' @param x_standardized (matrix) matrix of numeric values with number of rows equal
@@ -79,9 +77,9 @@
 #'
 #' @export
 
-glm_studt = function(stan_fit = stanmodels$RegStudT,
-                     y,
+glm_studt = function(y,
                      x_standardized,
+                     family = "binomial",
                      beta_scale,
                      dof = 1,
                      slab_precision = (1/15)^2,
@@ -100,7 +98,19 @@ glm_studt = function(stan_fit = stanmodels$RegStudT,
   accepted_divergences = Inf;
   curr_try = 1;
 
+  # Mike:
+  # if family == "binomial", then I want to use the regstudt_binomial.stan program
+  # if family == "gaussian", then I want to use the regstudt_gaussian.stan program
+  # all of the other arguments can be left alone.
+
+  if(family == "binomial") {
+    stan_fit = stanmodels$regstudt_binomial;
+  } else {
+    stan_fit = stanmodels$regstudt_gaussian;
+  }
+
   while(curr_try <= ntries) {
+
     assign("curr_fit",tryCatch.W.E(sampling(object = stan_fit,
                                            data = list(n_stan = length(y),
                                                        p_stan = ncol(x_standardized),
