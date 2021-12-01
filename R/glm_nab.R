@@ -64,9 +64,6 @@
 #' @param mc_stepsize positive stepsize
 #' @param mc_adapt_delta between 0 and 1
 #' @param mc_max_treedepth max tree depth
-#' @param ntries (pos. integer) the stan function will run up to this many times,
-#' stopping either when the number of divergent transitions* is zero or when ntries
-#' has been reached. The reported fit will be that with the fewest number of divergent iterations.
 #' @param return_as_stanfit (logical) should the function return the stanfit
 #' object asis or should a summary of stanfit be returned as a regular list
 #' @param eigendecomp_hist_var: R object of class 'eigen' containing a pxp matrix
@@ -94,6 +91,7 @@
 #'
 #' foo = glm_nab(y = current$y_curr,
 #'               x_standardized = current[,2:11],
+#'               family = "binomial",
 #'               alpha_prior_mean = c(1.462, -1.660, 0.769, -0.756),
 #'               alpha_prior_cov = alpha_prior_cov,
 #'               phi_dist = "trunc_norm",
@@ -113,7 +111,6 @@
 #'               mc_stepsize = 0.1,
 #'               mc_adapt_delta = 0.999,
 #'               mc_max_treedepth = 15,
-#'               ntries = 2,
 #'               eigendecomp_hist_var = eigendecomp_hist_var,
 #'               scale_to_variance225 = scale_to_variance225);
 #'
@@ -143,7 +140,6 @@ glm_nab = function(y,
                    mc_stepsize = 0.1,
                    mc_adapt_delta = 0.9,
                    mc_max_treedepth = 15,
-                   ntries = 1,
                    return_as_stanfit = FALSE,
                    eigendecomp_hist_var = NULL,
                    scale_to_variance225 = NULL
@@ -191,99 +187,68 @@ glm_nab = function(y,
     stop("'phi_dist' must equal 'trunc_norm' or 'beta'")
   }
 
-  max_divergences = -Inf;
-  accepted_divergences = Inf;
-  curr_try = 1;
 
-  # Mike:
-  # if family == "binomial", then I want to use the nab_binomial.stan program
-  # if family == "gaussian", then I want to use the nab_gaussian.stan program
-  # all of the other arguments can be left alone.
+  # Now we do the sampling in Stan
+  model_file <-
+    system.file("stan",
+                paste0("nab_", family, ".stan"),
+                package = "adaptBayes",
+                mustWork = TRUE)
+  model <- cmdstanr::cmdstan_model(model_file)
 
-  if(family == "binomial") {
-    stan_fit = stanmodels$nab_binomial;
-  } else {
-    stan_fit = stanmodels$nab_gaussian;
+
+  curr_fit <-
+    tryCatch.W.E(
+      model$sample(
+        data = list(n_stan = length(y),
+                    p_stan = p,
+                    q_stan = q,
+                    y_stan = y,
+                    x_standardized_stan = x_standardized,
+                    alpha_prior_mean_stan = alpha_prior_mean,
+                    alpha_prior_cov_stan = alpha_prior_cov,
+                    sqrt_eigenval_hist_var_stan = sqrt_eigenval_hist_var,
+                    eigenvec_hist_var_stan = eigenvec_hist_var,
+                    local_dof_stan = local_dof,
+                    global_dof_stan = global_dof,
+                    beta_orig_scale_stan = beta_orig_scale,
+                    beta_aug_scale_stan = beta_aug_scale,
+                    beta_aug_scale_tilde_stan = beta_aug_scale_tilde,
+                    slab_precision_stan = slab_precision,
+                    scale_to_variance225 = scale_to_variance225,
+                    phi_prior_type = ifelse(phi_dist == "trunc_norm", 1L, 0L),
+                    phi_mean_stan = phi_mean,
+                    phi_sd_stan = phi_sd,
+                    only_prior = as.integer(only_prior)),
+        iter_warmup = mc_warmup,
+        iter = mc_iter_after_warmup,
+        chains = mc_chains,
+        parallel_chains = min(mc_chains, getOption("mc.cores")),
+        thin = mc_thin,
+        step_size = mc_stepsize,
+        adapt_delta = mc_adapt_delta,
+        max_treedepth = mc_max_treedepth))
+
+  if("simpleError"%in%class(curr_fit$value) || "error"%in%class(curr_fit$value)) {
+    stop(curr_fit$value);
   }
 
-  while(curr_try <= ntries) {
-
-    assign("curr_fit",tryCatch.W.E(sampling(object = stan_fit,
-                                            data = list(n_stan = length(y),
-                                                        p_stan = p,
-                                                        q_stan = q,
-                                                        y_stan = y,
-                                                        x_standardized_stan = x_standardized,
-                                                        alpha_prior_mean_stan = alpha_prior_mean,
-                                                        alpha_prior_cov_stan = alpha_prior_cov,
-                                                        sqrt_eigenval_hist_var_stan = sqrt_eigenval_hist_var,
-                                                        eigenvec_hist_var_stan = eigenvec_hist_var,
-                                                        local_dof_stan = local_dof,
-                                                        global_dof_stan = global_dof,
-                                                        beta_orig_scale_stan = beta_orig_scale,
-                                                        beta_aug_scale_stan = beta_aug_scale,
-                                                        beta_aug_scale_tilde_stan = beta_aug_scale_tilde,
-                                                        slab_precision_stan = slab_precision,
-                                                        scale_to_variance225 = scale_to_variance225,
-                                                        phi_prior_type = ifelse(phi_dist == "trunc_norm", 1L, 0L),
-                                                        phi_mean_stan = phi_mean,
-                                                        phi_sd_stan = phi_sd,
-                                                        only_prior = as.integer(only_prior)),
-                                           warmup = mc_warmup,
-                                           iter = mc_iter_after_warmup + mc_warmup,
-                                           chains = mc_chains,
-                                           thin = mc_thin,
-                                           control = list(stepsize = mc_stepsize,
-                                                          adapt_delta = mc_adapt_delta,
-                                                          max_treedepth = mc_max_treedepth))));
-
-    if("simpleError"%in%class(curr_fit$value) || "error"%in%class(curr_fit$value)) {
-      stop(curr_fit$value);
-    }
-    if(return_as_stanfit) {
-      break;
-    }
-    curr_divergences = count_stan_divergences(curr_fit$value);
-    rhat_check = max(summary(curr_fit$value)$summary[,"Rhat"],na.rm=T);
-    # Originally, the break conditions were baesd upon having both no divergent
-    # transitions as well as a max Rhat (i.e. gelman-rubin diagnostic) sufficiently
-    # close to 1. I subsequently changed the conditions to be based only upon the
-    # first, which is reflected by setting rhat = T immediately below.
-    break_conditions = c(divergence = F, rhat = T);
-    if(curr_divergences == 0) {
-      max_divergences = 0;
-      break_conditions["divergence"] = T;
-    } else {
-      max_divergences = max(max_divergences, curr_divergences, na.rm = T);
-      curr_try = curr_try + 1;
-    }
-    #update if fewer divergent transitions were found
-    if(curr_divergences < accepted_divergences) {
-      accepted_divergences = curr_divergences;
-      max_rhat = rhat_check;
-      foo = rstan::extract(curr_fit$value);
-      curr_beta0 = as.numeric(foo$mu);
-      curr_beta = foo$beta;
-      theta_orig = foo$theta_orig;
-      theta_aug = foo$theta_aug;
-      phi = foo$phi_copy;
-      eta = foo$eta;
-    }
-    if(all(break_conditions)) {
-      break;
-    }
-  }
   if(return_as_stanfit) {
     curr_fit$value;
+
   } else {
-    list(accepted_divergences = accepted_divergences,
-         max_divergences = max_divergences,
-         max_rhat = max_rhat,
-         curr_beta0 = curr_beta0,
-         curr_beta = curr_beta,
-         theta_orig = theta_orig,
-         theta_aug = theta_aug,
-         phi = phi,
-         eta = eta);
+
+    model_diagnostics <- curr_fit$value$sampler_diagnostics()
+    model_summary <- curr_fit$value$summary()
+
+    list(num_divergences = sum(model_diagnostics[,,"divergent__"]),
+         max_rhat = max(model_summary$rhat, na.rm=T),
+         curr_beta0 = curr_fit$value$draws("mu", format="matrix")[, 1, drop = T],
+         curr_beta = curr_fit$value$draws("beta", format="matrix"),
+         theta_orig =  curr_fit$value$draws("theta_orig", format="matrix"),
+         theta_aug = curr_fit$value$draws("theta_aug", format="matrix"),
+         phi = curr_fit$value$draws("phi_copy", format="matrix")[, 1, drop = T],
+         eta = curr_fit$value$draws("eta", format="matrix")[, 1, drop = T]);
+
   }
 }

@@ -32,10 +32,10 @@
 #'
 #' @return A \code{list} containing the following named elements:
 #' \itemize{
-#'   \item{scale1}{the value of }
-#'   \item{diff_from_target1}{}
-#'   \item{iter1}{}
-#'   \item{prior_num1}{}
+#'   \item{scale1}{the solution, interpreted as c / sigma}
+#'   \item{diff_from_target1}{the difference between the numerical value and the target, should be close to zero}
+#'   \item{iter1}{number of iterations performed}
+#'   \item{prior_num1}{the resulting value of m_eff corresponding to this solution}
 #' }
 #'
 #'
@@ -62,7 +62,7 @@ solve_for_hiershrink_scale = function(target_mean,
   }
   if(do_global) {
     tau = rt(n_sim,df=global_dof);
-    lambda = lambda* tau;
+    lambda = lambda * tau;
     rm(tau);
   }
   lambda_sq = lambda^2
