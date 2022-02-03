@@ -22,7 +22,12 @@ transformed parameters {
 }
 model {
   beta_raw ~ normal(0.0, 1.0);
-  lambda_scale_sq ~ inv_gamma(dof_stan/2.0, dof_stan/2.0);
+  // We multiply the scale parameter (the second parameter) to take into account
+  // the contribution from "sigma", which
+  // isn't really a parameter in a logistic glm but follows the maximum variance
+  // assumption that Pirronen et al. suggest in their discussion on the choice
+  // of the scale parameter
+  lambda_scale_sq ~ inv_gamma(dof_stan/2.0, dof_stan);
   mu ~ logistic(0.0, 5.0);
   if(only_prior == 0)
     y_stan ~ bernoulli_logit(mu + x_standardized_stan * beta);

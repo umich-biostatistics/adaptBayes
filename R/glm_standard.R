@@ -3,8 +3,6 @@
 #' Program for fitting a GLM equipped with the 'standard' prior evaluated
 #' in Boonstra and Barbaro, which is the regularized horseshoe.
 #'
-#' @param stan_fit an R object of class stanfit, which allows the function to run
-#' without recompiling the stan code.
 #' @param y (vector) outcomes corresponding to the type of glm desired. This should
 #' match whatever datatype is expected by the stan program.
 #' @param x_standardized (matrix) matrix of numeric values with number of rows equal
@@ -15,6 +13,9 @@
 #' all data should be standardized to have a common scale before model fitting.
 #' If regression coefficients on the natural scale are desired, they be easily obtained
 #' through unstandardizing.
+#' @param family (character) Similar to argument in `glm` with the same name, but
+#'  here this must be a character, and currently only 'binomial' (if y is binary) or
+#' 'gaussian' (if y is continuous) are valid choices.
 #' @param p,
 #' @param q (nonneg. integers) numbers, the sum of which add up to the number of columns
 #' in x_standardized. For the standard prior, this distinction is only needed if a different
@@ -22,14 +23,19 @@
 #' in the notation of Boonstra and Barbaro, is used.
 #' @param beta_orig_scale,
 #' @param beta_aug_scale (pos. real) constants indicating the prior scale of the
-#' horseshoe. Both values correspond to 'c' in the notation of Boonstra and Barbaro,
-#' because that paper never considers beta_orig_scale!=beta_aug_scale
-#' @param local_dof (pos. integer) numbers indicating the degrees of freedom for
-#' lambda_j and tau, respectively. Boonstra, et al. never considered local_dof != 1
-#' or global_dof != 1.
-#' @param global_dof (pos. integer) numbers indicating the degrees of freedom for
-#' lambda_j and tau, respectively. Boonstra, et al. never considered local_dof != 1
-#' or global_dof != 1.
+#' horseshoe. Both values correspond to 'c / sigma' in the notation of Boonstra and Barbaro,
+#' because that paper never considers beta_orig_scale!=beta_aug_scale. Use
+#' the function `solve_for_hiershrink_scale` to calculate this quantity. If 'y'
+#' is binary, then sigma doesn't actually exist as a
+#' parameter, and it will be set equal to 2 inside the function.
+#' If 'y' is continuous, then sigma is equipped with its own weak
+#' prior. In either case, it is not intended that the user scale by sigma "manually".
+#' @param local_dof (pos. integer) number indicating the degrees of freedom for
+#' lambda_j. Boonstra and Barbaro always used local_dof = 1. Choose a negative
+#' value to tell the function that there are no local hyperparameters.
+#' @param global_dof (pos. integer) number indicating the degrees of freedom for
+#' tau. Boonstra and Barbaro always used global_dof = 1. Choose a negative
+#' value to tell the function that there is no global hyperparameter.
 #' @param slab_precision (pos. real) the slab-part of the regularized horseshoe,
 #' this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro
 #' @param intercept_offset (vector) vector of 0's and 1's equal having the same length as y.
@@ -47,9 +53,6 @@
 #' @param mc_stepsize positive stepsize
 #' @param mc_adapt_delta between 0 and 1
 #' @param mc_max_treedepth max tree depth
-#' @param ntries (pos. integer) the stan function will run up to this many times,
-#' stopping either when the number of divergent transitions* is zero or when ntries
-#' has been reached. The reported fit will be that with the fewest number of divergent iterations.
 #' @param return_as_stanfit (logical) should the function return the stanfit
 #' object asis or should a summary of stanfit be returned as a regular list
 #'
@@ -63,6 +66,7 @@
 #'
 #' foo = glm_standard(y = historical$y_hist,
 #'                    x_standardized = historical[,2:5],
+#'                    family = "binomial",
 #'                    p = 4,
 #'                    q = 0,
 #'                    beta_orig_scale = 0.0231,
@@ -78,13 +82,13 @@
 #'                    mc_thin = 1,
 #'                    mc_stepsize = 0.1,
 #'                    mc_adapt_delta = 0.99,
-#'                    mc_max_treedepth = 15,
-#'                    ntries = 2);
+#'                    mc_max_treedepth = 15);
 #'
 #'  data(current)
 #'
 #'  foo = glm_standard(y = current$y_curr,
 #'                     x_standardized = current[,2:11],
+#'                     family = "binomial",
 #'                     p = 4,
 #'                     q = 6,
 #'                     beta_orig_scale = 0.0223,
@@ -100,14 +104,13 @@
 #'                     mc_thin = 1,
 #'                     mc_stepsize = 0.1,
 #'                     mc_adapt_delta = 0.99,
-#'                     mc_max_treedepth = 15,
-#'                     ntries = 2);
+#'                     mc_max_treedepth = 15);
 #'
 #' @export
 
-glm_standard = function(stan_fit = stanmodels$RegHS_Stable,
-                        y,
+glm_standard = function(y,
                         x_standardized,
+                        family = "binomial",
                         p,
                         q,
                         beta_orig_scale,
@@ -124,82 +127,68 @@ glm_standard = function(stan_fit = stanmodels$RegHS_Stable,
                         mc_stepsize = 0.1,
                         mc_adapt_delta = 0.9,
                         mc_max_treedepth = 15,
-                        ntries = 1,
                         return_as_stanfit = FALSE) {
 
-  stopifnot(ncol(x_standardized) == (p+q));
+  if(family != "gaussian" && family != "binomial") {
+    stop("'family' must equal 'gaussian' or 'binomial'")
+  }
 
-  max_divergences = -Inf;
-  accepted_divergences = Inf;
-  curr_try = 1;
+  stopifnot(ncol(x_standardized) == (p+q));
   if(is.null(intercept_offset)) {intercept_offset = numeric(length(y));}
 
-  while(curr_try <= ntries) {
-    assign("curr_fit",tryCatch.W.E(sampling(object = stan_fit,
-                                            data = list(n_stan = length(y),
-                                                       p_stan = p,
-                                                       q_stan = q,
-                                                       y_stan = y,
-                                                       x_standardized_stan = x_standardized,
-                                                       local_dof_stan = local_dof,
-                                                       global_dof_stan = global_dof,
-                                                       beta_orig_scale_stan = beta_orig_scale,
-                                                       beta_aug_scale_stan = beta_aug_scale,
-                                                       slab_precision_stan = slab_precision,
-                                                       intercept_offset_stan = intercept_offset,
-                                                       only_prior = as.integer(only_prior)),
-                                           warmup = mc_warmup,
-                                           iter = mc_iter_after_warmup + mc_warmup,
-                                           chains = mc_chains,
-                                           thin = mc_thin,
-                                           control = list(stepsize = mc_stepsize,
-                                                          adapt_delta = mc_adapt_delta,
-                                                          max_treedepth = mc_max_treedepth))));
-    if("simpleError"%in%class(curr_fit$value) || "error"%in%class(curr_fit$value)) {
-      stop(curr_fit$value);
-    }
-    if(return_as_stanfit) {
-      break;
-    }
-    curr_divergences = count_stan_divergences(curr_fit$value);
-    rhat_check = max(summary(curr_fit$value)$summary[,"Rhat"],na.rm=T);
-    # Originally, the break conditions were baesd upon having both no divergent
-    # transitions as well as a max Rhat (i.e. gelman-rubin diagnostic) sufficiently
-    # close to 1. I subsequently changed the conditions to be based only upon the
-    # first, which is reflected by setting rhat = T immediately below.
-    break_conditions = c(divergence = F, rhat = T);
-    if(curr_divergences == 0) {
-      max_divergences = 0;
-      break_conditions["divergence"] = T;
-    } else {
-      max_divergences = max(max_divergences, curr_divergences, na.rm = T);
-      curr_try = curr_try + 1;
-    }
-    #update if fewer divergent transitions were found
-    if(curr_divergences < accepted_divergences) {
-      accepted_divergences = curr_divergences;
-      max_rhat = rhat_check;
-      foo = rstan::extract(curr_fit$value);
-      hist_beta0 = as.numeric(foo$mu);
-      curr_beta0 = as.numeric(foo$mu) + as.numeric(foo$mu_offset);
-      curr_beta = foo$beta;
-      theta_orig = foo$theta_orig;
-      theta_aug = foo$theta_aug;
-    }
-    if(all(break_conditions)) {
-      break;
-    }
+
+
+  # Now we do the sampling in Stan
+  model_file <-
+    system.file("stan",
+                paste0("reghs_", family, ".stan"),
+                package = "adaptBayes",
+                mustWork = TRUE)
+  model <- cmdstanr::cmdstan_model(model_file)
+
+  curr_fit <-
+    tryCatch.W.E(
+      model$sample(
+        data = list(n_stan = length(y),
+                    p_stan = p,
+                    q_stan = q,
+                    y_stan = y,
+                    x_standardized_stan = x_standardized,
+                    local_dof_stan = local_dof,
+                    global_dof_stan = global_dof,
+                    beta_orig_scale_stan = beta_orig_scale,
+                    beta_aug_scale_stan = beta_aug_scale,
+                    slab_precision_stan = slab_precision,
+                    intercept_offset_stan = intercept_offset,
+                    only_prior = as.integer(only_prior)),
+        iter_warmup = mc_warmup,
+        iter = mc_iter_after_warmup,
+        chains = mc_chains,
+        parallel_chains = min(mc_chains, getOption("mc.cores")),
+        thin = mc_thin,
+        step_size = mc_stepsize,
+        adapt_delta = mc_adapt_delta,
+        max_treedepth = mc_max_treedepth))
+
+  if("simpleError"%in%class(curr_fit$value) || "error"%in%class(curr_fit$value)) {
+    stop(curr_fit$value);
   }
+
   if(return_as_stanfit) {
     curr_fit$value;
+
   } else {
-    list(accepted_divergences = accepted_divergences,
-         max_divergences = max_divergences,
-         max_rhat = max_rhat,
-         hist_beta0 = hist_beta0,
-         curr_beta0 = curr_beta0,
-         curr_beta = curr_beta,
-         theta_orig = theta_orig,
-         theta_aug = theta_aug);
+
+    model_diagnostics <- curr_fit$value$sampler_diagnostics()
+    model_summary <- curr_fit$value$summary()
+
+    list(num_divergences = sum(model_diagnostics[,,"divergent__"]),
+         max_rhat = max(model_summary$rhat, na.rm=T),
+         hist_beta0 = curr_fit$value$draws("mu", format="matrix")[, 1, drop = T],
+         curr_beta0 = curr_fit$value$draws("mu", format="matrix")[, 1, drop = T] +
+           curr_fit$value$draws("mu_offset", format="matrix")[, 1, drop = T],
+         curr_beta = curr_fit$value$draws("beta", format="matrix"),
+         theta_orig =  curr_fit$value$draws("theta_orig", format="matrix"),
+         theta_aug = curr_fit$value$draws("theta_aug", format="matrix"));
   }
 }
