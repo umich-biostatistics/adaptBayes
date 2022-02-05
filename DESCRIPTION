@@ -16,15 +16,11 @@ Depends:
     R (>= 3.4.0)
 Imports: 
     methods,
-    Rcpp (>= 0.12.0),
-    rstan (>= 2.18.1),
-    rstantools (>= 2.0.0.9000),
-    mice
+    dplyr,
+    mice,
+    cmdstanr
 LinkingTo: 
     BH (>= 1.66.0),
-    Rcpp (>= 0.12.0),
-    RcppEigen (>= 0.3.3.3.0),
-    rstan (>= 2.18.1),
     StanHeaders (>= 2.18.0)
-SystemRequirements: GNU make
+SystemRequirements: GNU make, CmdStan (https://mc-stan.org/users/interfaces/cmdstan)
 RoxygenNote: 7.1.2

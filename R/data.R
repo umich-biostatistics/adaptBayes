@@ -6,7 +6,7 @@
 #' @name historical
 #' @docType data
 #' @keywords data
-#' @example data()
+
 NULL
 
 #' Example data set
@@ -16,5 +16,5 @@ NULL
 #' @name current
 #' @docType data
 #' @keywords data
-#' @example data()
+
 NULL

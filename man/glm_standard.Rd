@@ -5,9 +5,9 @@
 \title{GLM equipped with the 'standard' prior evaluated}
 \usage{
 glm_standard(
-  stan_fit = stanmodels$RegHS_Stable,
   y,
   x_standardized,
+  family = "binomial",
   p,
   q,
   beta_orig_scale,
@@ -24,14 +24,10 @@ glm_standard(
   mc_stepsize = 0.1,
   mc_adapt_delta = 0.9,
   mc_max_treedepth = 15,
-  ntries = 1,
   return_as_stanfit = FALSE
 )
 }
 \arguments{
-\item{stan_fit}{an R object of class stanfit, which allows the function to run
-without recompiling the stan code.}
-
 \item{y}{(vector) outcomes corresponding to the type of glm desired. This should
 match whatever datatype is expected by the stan program.}
 
@@ -44,22 +40,35 @@ all data should be standardized to have a common scale before model fitting.
 If regression coefficients on the natural scale are desired, they be easily obtained
 through unstandardizing.}
 
+\item{family}{(character) Similar to argument in `glm` with the same name, but
+ here this must be a character, and currently only 'binomial' (if y is binary) or
+'gaussian' (if y is continuous) are valid choices.}
+
+\item{p}{see `q`}
+
 \item{q}{(nonneg. integers) numbers, the sum of which add up to the number of columns
 in x_standardized. For the standard prior, this distinction is only needed if a different
 constant scale parameter (beta_orig_scale, beta_aug_scale), which is the constant 'c'
 in the notation of Boonstra and Barbaro, is used.}
 
+\item{beta_orig_scale}{see `beta_aug_scale`}
+
 \item{beta_aug_scale}{(pos. real) constants indicating the prior scale of the
-horseshoe. Both values correspond to 'c' in the notation of Boonstra and Barbaro,
-because that paper never considers beta_orig_scale!=beta_aug_scale}
+horseshoe. Both values correspond to 'c / sigma' in the notation of Boonstra and Barbaro,
+because that paper never considers beta_orig_scale!=beta_aug_scale. Use
+the function `solve_for_hiershrink_scale` to calculate this quantity. If 'y'
+is binary, then sigma doesn't actually exist as a
+parameter, and it will be set equal to 2 inside the function.
+If 'y' is continuous, then sigma is equipped with its own weak
+prior. In either case, it is not intended that the user scale by sigma "manually".}
 
-\item{local_dof}{(pos. integer) numbers indicating the degrees of freedom for
-lambda_j and tau, respectively. Boonstra, et al. never considered local_dof != 1
-or global_dof != 1.}
+\item{local_dof}{(pos. integer) number indicating the degrees of freedom for
+lambda_j. Boonstra and Barbaro always used local_dof = 1. Choose a negative
+value to tell the function that there are no local hyperparameters.}
 
-\item{global_dof}{(pos. integer) numbers indicating the degrees of freedom for
-lambda_j and tau, respectively. Boonstra, et al. never considered local_dof != 1
-or global_dof != 1.}
+\item{global_dof}{(pos. integer) number indicating the degrees of freedom for
+tau. Boonstra and Barbaro always used global_dof = 1. Choose a negative
+value to tell the function that there is no global hyperparameter.}
 
 \item{slab_precision}{(pos. real) the slab-part of the regularized horseshoe,
 this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro}
@@ -88,10 +97,6 @@ were available but there is a desire to adjust for potentially different baselin
 
 \item{mc_max_treedepth}{max tree depth}
 
-\item{ntries}{(pos. integer) the stan function will run up to this many times,
-stopping either when the number of divergent transitions* is zero or when ntries
-has been reached. The reported fit will be that with the fewest number of divergent iterations.}
-
 \item{return_as_stanfit}{(logical) should the function return the stanfit
 object asis or should a summary of stanfit be returned as a regular list}
 }
@@ -108,6 +113,7 @@ data(historical)
 
 foo = glm_standard(y = historical$y_hist,
                    x_standardized = historical[,2:5],
+                   family = "binomial",
                    p = 4,
                    q = 0,
                    beta_orig_scale = 0.0231,
@@ -123,13 +129,13 @@ foo = glm_standard(y = historical$y_hist,
                    mc_thin = 1,
                    mc_stepsize = 0.1,
                    mc_adapt_delta = 0.99,
-                   mc_max_treedepth = 15,
-                   ntries = 2);
+                   mc_max_treedepth = 15);
 
  data(current)
 
  foo = glm_standard(y = current$y_curr,
                     x_standardized = current[,2:11],
+                    family = "binomial",
                     p = 4,
                     q = 6,
                     beta_orig_scale = 0.0223,
@@ -145,7 +151,6 @@ foo = glm_standard(y = historical$y_hist,
                     mc_thin = 1,
                     mc_stepsize = 0.1,
                     mc_adapt_delta = 0.99,
-                    mc_max_treedepth = 15,
-                    ntries = 2);
+                    mc_max_treedepth = 15);
 
 }

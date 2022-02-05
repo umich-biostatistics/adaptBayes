@@ -5,63 +5,40 @@
 \title{Compute inverse of 'solve_for_hiershrink_scale'}
 \usage{
 calculate_m_eff(
-  scale1,
-  scale2 = NA,
-  npar1,
-  npar2 = 0,
+  scale,
+  npar,
   local_dof = 1,
-  regional_dof = -Inf,
   global_dof = 1,
   slab_precision = (1/15)^2,
   n,
-  sigma = 2,
-  tol = .Machine$double.eps^0.5,
-  max_iter = 100,
   n_sim = 2e+05
 )
 }
 \arguments{
-\item{scale1}{global (if scale2=NA) or regional scale parameter value 1}
+\item{scale}{(pos. real) the scale parameter, defined as c / sigma.}
 
-\item{scale2}{regional scale parameter value 2, can be NA if scale 1 is specified}
+\item{npar}{(pos. integers): the number of covariates.}
 
-\item{npar1}{partition of the parameters}
+\item{local_dof}{(pos. integer) number indicating the degrees of freedom for
+lambda_j. Boonstra and Barbaro always used local_dof = 1. Choose a negative
+value to tell the function that there are no local hyperparameters.}
 
-\item{npar2}{second part of partition of the parameters}
-
-\item{local_dof}{(pos. integer) numbers indicating the degrees of freedom for
-lambda_j and tau, respectively. Boonstra, et al. never considered local_dof != 1
-or global_dof != 1.}
-
-\item{regional_dof}{regional degrees of freedom}
-
-\item{global_dof}{(pos. integer) numbers indicating the degrees of freedom for
-lambda_j and tau, respectively. Boonstra, et al. never considered local_dof != 1
-or global_dof != 1.}
+\item{global_dof}{(pos. integer) number indicating the degrees of freedom for
+tau. Boonstra and Barbaro always used global_dof = 1. Choose a negative
+value to tell the function that there is no global hyperparameter.}
 
 \item{slab_precision}{(pos. real) the slab-part of the regularized horseshoe,
 this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro}
 
 \item{n}{sample size}
 
-\item{sigma}{varaince}
-
-\item{tol}{tolerance level}
-
-\item{max_iter}{max number of iterations}
-
 \item{n_sim}{number of simulates}
 }
 \value{
-A list containing prior numbers 1 and 2, the implied prior number of
-effective parameters.
+the implied number of effective parameters.
 }
 \description{
 Instead of providing a desired effective number of parameters, the user provides
-the scale value(s), which is c in the notation of Boonstra and Barbaro, and the the
-function gives the implied prior number of effective parameters based upon this.
-As with 'solve_for_hiershrink_scale', the user can provide one global scale parameter
-(scale1, leaving scale2 = NA) that applies to all parameters, or two regional scale
-parameters (scale1, scale2), that applies to a partition of the parameters as
-defined by the first npar1 parameters and the second npar2 parameters.
+the scale value, which is c / sigma, in the notation of Boonstra and Barbaro, and the
+function gives the implied prior number of effective parameters based upon this value.
 }

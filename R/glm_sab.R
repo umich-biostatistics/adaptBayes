@@ -26,7 +26,8 @@
 #' It can be calculated using the function 'create_projection'
 #' @param phi_dist (character) the name of the distribution to use as a prior on
 #' phi. This must be either 'trunc_norm' or 'beta'.
-#' @param phi_mean, @param phi_sd (real) prior mean and standard deviation of phi.
+#' @param phi_mean see `phi_sd`
+#' @param phi_sd (real) prior mean and standard deviation of phi.
 #' At a minimum, phi_mean must be in [0,1] and phi_sd must be non-negative (you *can*
 #' choose phi_sd = 0, meaning that phi is identically equal to phi_mean).
 #' If 'phi_dist' is 'trunc_norm', then 'phi_mean' and 'phi_sd'
@@ -40,7 +41,7 @@
 #' shape parameters is much less than 1. An error will be thrown if an invalid parameterization
 #' is provided, and a warning will be thrown if a parameterization is provided
 #' that is likely to result in a "challenging" prior.
-#' @param beta_orig_scale,
+#' @param beta_orig_scale see `beta_aug_scale`
 #' @param beta_aug_scale (pos. real) constants indicating the prior scale of the
 #' horseshoe. Both values correspond to 'c / sigma' in the notation of Boonstra and Barbaro,
 #' because that paper never considers beta_orig_scale!=beta_aug_scale. Use
@@ -67,10 +68,10 @@
 #' @param mc_max_treedepth max tree depth
 #' @param return_as_stanfit (logical) should the function return the stanfit
 #' object asis or should a summary of stanfit be returned as a regular list
-#' @param eigendecomp_hist_var: R object of class 'eigen' containing a pxp matrix
+#' @param eigendecomp_hist_var R object of class 'eigen' containing a pxp matrix
 #' of eigenvectors in each row (equivalent to v_0 in Boonstra and Barbaro) and
 #' a p-length vector of eigenvalues. This is by default equal to eigen(alpha_prior_cov)
-#' @param scale_to_variance225: a vector assumed to be such that, when multiplied
+#' @param scale_to_variance225 a vector assumed to be such that, when multiplied
 #' by the diagonal elements of alpha_prior_cov, the result is a vector of
 #' elements each equal to 225. This is explicitly calculated if it is not provided
 #'
@@ -119,7 +120,7 @@
 #'               eigendecomp_hist_var = eigendecomp_hist_var,
 #'               scale_to_variance225 = scale_to_variance225);
 #'
-#' @import rstan
+#' @import cmdstanr dplyr
 #' @export
 
 glm_sab = function(y,

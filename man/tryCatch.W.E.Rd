@@ -6,6 +6,9 @@
 \usage{
 tryCatch.W.E(expr)
 }
+\arguments{
+\item{expr}{R expression}
+}
 \description{
 Borrowed from the R package simsalapar
 }

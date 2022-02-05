@@ -20,7 +20,7 @@
 #'
 #' @return the implied number of effective parameters.
 #'
-#'
+#' @importFrom stats rt
 #' @export
 
 calculate_m_eff = function(scale,

@@ -16,6 +16,9 @@
 #' all data should be standardized to have a common scale before model fitting.
 #' If regression coefficients on the natural scale are desired, they be easily obtained
 #' through unstandardizing.
+#' @param family (character) Similar to argument in `glm` with the same name, but
+#'  here this must be a character, and currently only 'binomial' (if y is binary) or
+#' 'gaussian' (if y is continuous) are valid choices.
 #' @param beta_scale (pos. real) constants indicating the prior scale of the student-t prior.
 #' @param dof (pos. integer) degrees of freedom for the student-t prior
 #' @param slab_precision (pos. real) the slab-part of the regularized horseshoe,
@@ -40,6 +43,7 @@
 #'
 #'     foo = glm_studt(y = historical$y_hist,
 #'                     x_standardized = historical[,2:5],
+#'                     family = "binomial",
 #'                     beta_scale = 0.0231,
 #'                     dof = 1,
 #'                     slab_precision = 0.00444,
@@ -56,6 +60,7 @@
 #'
 #'     foo = glm_studt(y = current$y_curr,
 #'                     x_standardized = current[,2:11],
+#'                     family = "binomial",
 #'                     beta_scale = 0.0231,
 #'                     dof = 1,
 #'                     slab_precision = 0.00444,
@@ -68,7 +73,7 @@
 #'                     mc_adapt_delta = 0.99,
 #'                     mc_max_treedepth = 15);
 #'
-#' @import rstan
+#' @import cmdstanr dplyr
 #'
 #' @export
 

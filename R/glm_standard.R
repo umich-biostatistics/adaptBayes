@@ -16,12 +16,12 @@
 #' @param family (character) Similar to argument in `glm` with the same name, but
 #'  here this must be a character, and currently only 'binomial' (if y is binary) or
 #' 'gaussian' (if y is continuous) are valid choices.
-#' @param p,
+#' @param p see `q`
 #' @param q (nonneg. integers) numbers, the sum of which add up to the number of columns
 #' in x_standardized. For the standard prior, this distinction is only needed if a different
 #' constant scale parameter (beta_orig_scale, beta_aug_scale), which is the constant 'c'
 #' in the notation of Boonstra and Barbaro, is used.
-#' @param beta_orig_scale,
+#' @param beta_orig_scale see `beta_aug_scale`
 #' @param beta_aug_scale (pos. real) constants indicating the prior scale of the
 #' horseshoe. Both values correspond to 'c / sigma' in the notation of Boonstra and Barbaro,
 #' because that paper never considers beta_orig_scale!=beta_aug_scale. Use
@@ -56,7 +56,7 @@
 #' @param return_as_stanfit (logical) should the function return the stanfit
 #' object asis or should a summary of stanfit be returned as a regular list
 #'
-#' @import rstan
+#' @import cmdstanr dplyr
 #'
 #' @return \code{list} object containing the draws and other information.
 #'
@@ -178,17 +178,27 @@ glm_standard = function(y,
     curr_fit$value;
 
   } else {
-
     model_diagnostics <- curr_fit$value$sampler_diagnostics()
     model_summary <- curr_fit$value$summary()
 
-    list(num_divergences = sum(model_diagnostics[,,"divergent__"]),
-         max_rhat = max(model_summary$rhat, na.rm=T),
-         hist_beta0 = curr_fit$value$draws("mu", format="matrix")[, 1, drop = T],
-         curr_beta0 = curr_fit$value$draws("mu", format="matrix")[, 1, drop = T] +
-           curr_fit$value$draws("mu_offset", format="matrix")[, 1, drop = T],
-         curr_beta = curr_fit$value$draws("beta", format="matrix"),
-         theta_orig =  curr_fit$value$draws("theta_orig", format="matrix"),
-         theta_aug = curr_fit$value$draws("theta_aug", format="matrix"));
+    if(q > 0) {
+
+      list(num_divergences = sum(model_diagnostics[,,"divergent__"]),
+           max_rhat = max(model_summary$rhat, na.rm=T),
+           hist_beta0 = curr_fit$value$draws("mu", format="matrix")[, 1, drop = T],
+           curr_beta0 = curr_fit$value$draws("mu", format="matrix")[, 1, drop = T] +
+             curr_fit$value$draws("mu_offset", format="matrix")[, 1, drop = T],
+           curr_beta = curr_fit$value$draws("beta", format="matrix"),
+           theta_orig =  curr_fit$value$draws("theta_orig", format="matrix"),
+           theta_aug = curr_fit$value$draws("theta_aug", format="matrix"));
+    } else {
+      list(num_divergences = sum(model_diagnostics[,,"divergent__"]),
+           max_rhat = max(model_summary$rhat, na.rm=T),
+           hist_beta0 = curr_fit$value$draws("mu", format="matrix")[, 1, drop = T],
+           curr_beta0 = curr_fit$value$draws("mu", format="matrix")[, 1, drop = T] +
+             curr_fit$value$draws("mu_offset", format="matrix")[, 1, drop = T],
+           curr_beta = curr_fit$value$draws("beta", format="matrix"),
+           theta_orig =  curr_fit$value$draws("theta_orig", format="matrix"));
+    }
   }
 }

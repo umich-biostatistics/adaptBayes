@@ -5,9 +5,9 @@
 \title{Fit GLM with a regularized student-t prior regression coefficients}
 \usage{
 glm_studt(
-  stan_fit = stanmodels$RegStudT,
   y,
   x_standardized,
+  family = "binomial",
   beta_scale,
   dof = 1,
   slab_precision = (1/15)^2,
@@ -19,14 +19,10 @@ glm_studt(
   mc_stepsize = 0.1,
   mc_adapt_delta = 0.9,
   mc_max_treedepth = 15,
-  ntries = 1,
   return_as_stanfit = FALSE
 )
 }
 \arguments{
-\item{stan_fit}{an R object of class stanfit, which allows the function to run
-without recompiling the stan code.}
-
 \item{y}{(vector) outcomes corresponding to the type of glm desired. This should
 match whatever datatype is expected by the stan program.}
 
@@ -38,6 +34,10 @@ mean zero and unit variance, so no standardization is conducted. In practice,
 all data should be standardized to have a common scale before model fitting.
 If regression coefficients on the natural scale are desired, they be easily obtained
 through unstandardizing.}
+
+\item{family}{(character) Similar to argument in `glm` with the same name, but
+ here this must be a character, and currently only 'binomial' (if y is binary) or
+'gaussian' (if y is continuous) are valid choices.}
 
 \item{beta_scale}{(pos. real) constants indicating the prior scale of the student-t prior.}
 
@@ -62,10 +62,6 @@ this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro}
 
 \item{mc_max_treedepth}{max tree depth}
 
-\item{ntries}{(pos. integer) the stan function will run up to this many times,
-stopping either when the number of divergent transitions* is zero or when ntries
-has been reached. The reported fit will be that with the fewest number of divergent iterations.}
-
 \item{return_as_stanfit}{(logical) should the function return the stanfit
 object asis or should a summary of stanfit be returned as a regular list}
 }
@@ -86,6 +82,7 @@ used in the data analysis. Specifically, it corresponds to 'PedRESC2'.
 
     foo = glm_studt(y = historical$y_hist,
                     x_standardized = historical[,2:5],
+                    family = "binomial",
                     beta_scale = 0.0231,
                     dof = 1,
                     slab_precision = 0.00444,
@@ -96,13 +93,13 @@ used in the data analysis. Specifically, it corresponds to 'PedRESC2'.
                     mc_thin = 1,
                     mc_stepsize = 0.1,
                     mc_adapt_delta = 0.99,
-                    mc_max_treedepth = 15,
-                    ntries = 2);
+                    mc_max_treedepth = 15);
 
     data(current)
 
     foo = glm_studt(y = current$y_curr,
                     x_standardized = current[,2:11],
+                    family = "binomial",
                     beta_scale = 0.0231,
                     dof = 1,
                     slab_precision = 0.00444,
@@ -113,7 +110,6 @@ used in the data analysis. Specifically, it corresponds to 'PedRESC2'.
                     mc_thin = 1,
                     mc_stepsize = 0.1,
                     mc_adapt_delta = 0.99,
-                    mc_max_treedepth = 15,
-                    ntries = 2);
+                    mc_max_treedepth = 15);
 
 }

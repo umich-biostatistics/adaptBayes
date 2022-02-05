@@ -6,6 +6,9 @@
 \usage{
 logit(x)
 }
+\arguments{
+\item{x}{number between 0 and 1}
+}
 \description{
 Helper function to log(x/(1-x))
 }

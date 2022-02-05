@@ -6,6 +6,9 @@
 \usage{
 expit(x)
 }
+\arguments{
+\item{x}{real number}
+}
 \description{
 Helper function to 1/(1+exp(-x))
 }
