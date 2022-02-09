@@ -1,8 +1,6 @@
 # R package `adaptBayes`
 
-This package contains `R` functions implementing the adaptive priors described 
-in Boonstra and Barbaro (2018). To install and load this package, run the 
-following code in `R`
+The adaptBayes R packages provides code to accompany the methodology developed in Boonstra and Barbaro (2020). The sensible adaptive bayesian update is implemented in `glm_sab()` and the naive adaptive bayesian update is implemented in `glm_nab()`. 
 
 ```r
 library(devtools)
@@ -18,45 +16,13 @@ which contains a vignette (`vignette.pdf`) on using the adaptive priors in this
 package as well as code for running the simulation studies in Boonstra and 
 Barbaro (2020). 
 
-### Compilation warning
-
-STAN is smart enough to recognize the need for the normalizing constant (i.e. 
-the Jacobian) and so, upon initial installation of the package, the compiler 
-will throw the following warning (once for each of the STAN files):
-
-```r
-DIAGNOSTIC(S) FROM PARSER:
-Warning (non-fatal):
-Left-hand side of sampling statement (~) may contain a
-non-linear transform of a parameter or local variable.
-If it does, you need to include a target += statement with
-the log absolute determinant of the Jacobian of the
-transform.
-Left-hand-side of sampling statement:
-    normalized_beta ~ normal(...)
-```
-
-This warning can be safely ignored because we do, in fact, calculate the 
-normalizing constant
-
-#### Note, 10-Jul-2018:
-
-After updating to version 3.5.0, <samp>R</samp> occasionally throws the 
-following 'error':
-
-`Error in x$.self$finalize() : attempt to apply non-function`
-
-Error is used in quotes because it does not interrupt any processes and does 
-not seem to affect any results. Searching online, this has been asked about by
-others and seems to be related to garbage collection:
-
-http://discourse.mc-stan.org/t/very-mysterious-debug-error-when-running-rstanarm-rstan-chains-error-in-x-self-finalize-attempt-to-apply-non-function/4746
-
-
 ### Current Suggested Citation
 
 Boonstra, Philip S. and Barbaro, Ryan P., "Incorporating Historical Models
 with Adaptive Bayesian Updates" (2020) *Biostatistics* 21, e47--e64
 https://doi.org/10.1093/biostatistics/kxy053
+
+Boonstra, Philip S. and Kleinsasser, Michael, "adaptBayes: R package for adaptive Bayesian updates" (2022) R package version 1.1.1.
+https://github.com/umich-biostatistics/adaptBayes
 
 <a href="https://biostats.bepress.com/umichbiostat/paper124">Authors' Copy </a>
