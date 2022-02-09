@@ -5,6 +5,8 @@
 #' @param x real number
 #'
 #' @importFrom stats plogis
+#' @export
+
 expit = function(x) {plogis(x);}
 
 
@@ -15,6 +17,8 @@ expit = function(x) {plogis(x);}
 #' @param x number between 0 and 1
 #'
 #' @importFrom stats qlogis
+#' @export
+
 logit = function(x) {qlogis(x);}
 
 
@@ -26,6 +30,8 @@ logit = function(x) {qlogis(x);}
 #'
 #' @param expr R expression
 #'
+#' @export
+
 tryCatch.W.E <- function(expr)
 {
   W <- NULL

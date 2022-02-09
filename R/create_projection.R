@@ -44,7 +44,7 @@ create_projection = function(x_curr_orig,
                              imputes_list = list(c(1,15)),
                              seed_start = sample(.Machine$integer.max,1),
                              predictorMatrix = NULL) {
-  require(magrittr);
+
   p = ncol(x_curr_orig);
   q = ncol(x_curr_aug);
   orig_covariates = colnames(x_curr_orig);

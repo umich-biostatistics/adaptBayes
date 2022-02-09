@@ -1,0 +1,33 @@
+citHeader("Please cite using the following:")
+
+citEntry(entry = "Article",
+  title        = "Incorporating Historical Models with Adaptive Bayesian Updates",
+  author       = personList(as.person("Philip S. Boonstra"),
+                   as.person("Ryan P. Barbaro")),
+  journal      = "Biostatistics",
+  year         = "2020",
+  volume       = "21",
+  pages        = "e47--e64",
+  url          = "https://doi.org/10.1093/biostatistics/kxy053",
+
+  textVersion  =
+  paste("Boonstra PS and Barbaro RP (2020).",
+        "Incorporating Historical Models with Adaptive Bayesian Updates.",
+        "Biostatistics, 21:e47--e64.",
+        "URL https://doi.org/10.1093/biostatistics/kxy053")
+)
+
+citEntry(entry = "Manual",
+  title        = "adaptBayes: R package for adaptive Bayesian updates",
+  author       = personList(as.person("Philip S. Boonstra"),
+                   as.person("Michael Kleinsasser")),
+  year         = "2022",
+  note         = "R package version 1.1.1",
+  url          = "https://github.com/umich-biostatistics/adaptBayes",
+
+  textVersion  =
+  paste("Boonstra PS and Kleinsasser M (2022).",
+        "adaptBayes: R package for adaptive Bayesian updates.",
+        "R package version 1.1.1.",
+        "URL https://github.com/umich-biostatistics/adaptBayes")
+)

@@ -1,14 +1,15 @@
 Package: adaptBayes
 Title: Adaptive Bayesian Updates
-Version: 1.1
+Version: 1.1.1
 Authors@R: 
     c(
     person(given = "Philip", family = "Boonstra", role = c("aut"), email = "philb@umich.edu"),
     person(given = "Michael", family = "Kleinsasser", role = c("cre"), email = "mkleinsa@umich.edu"))
-Description: R package for Boonstra, Philip S. and Barbaro, Ryan P., “Incorporating 
-    Historical Models with Adaptive Bayesian Updates” (2020) *Biostatistics* 21, e47--e64.
-    <doi:10.1093/biostatistics/kxy053>
-License: MIT
+Description: The adaptBayes R packages provides code to accompany the methodology
+    developed in Boonstra and Barbaro (2020). The sensible adaptive bayesian
+    update is implemented in `glm_sab()` and the naive adaptive bayesian update
+    is implemented in `glm_nab()`. 
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Biarch: true
@@ -19,8 +20,5 @@ Imports:
     dplyr,
     mice,
     cmdstanr
-LinkingTo: 
-    BH (>= 1.66.0),
-    StanHeaders (>= 2.18.0)
 SystemRequirements: GNU make, CmdStan (https://mc-stan.org/users/interfaces/cmdstan)
 RoxygenNote: 7.1.2
