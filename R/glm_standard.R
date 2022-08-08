@@ -55,6 +55,7 @@
 #' @param mc_max_treedepth max tree depth
 #' @param return_as_stanfit (logical) should the function return the stanfit
 #' object asis or should a summary of stanfit be returned as a regular list
+#' @param seed seed for the underlying STAN model to allow for reproducibility
 #'
 #' @import cmdstanr dplyr
 #'

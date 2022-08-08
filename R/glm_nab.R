@@ -73,6 +73,7 @@
 #' @param scale_to_variance225 a vector assumed to be such that, when multiplied
 #' by the diagonal elements of alpha_prior_cov, the result is a vector of
 #' elements each equal to 225. This is explicitly calculated if it is not provided
+#' @param seed seed for the underlying STAN model to allow for reproducibility
 #'
 #' @return \code{list} object containing the draws and other information.
 #'
