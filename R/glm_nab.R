@@ -77,7 +77,6 @@
 #'
 #' @return \code{list} object containing the draws and other information.
 #'
-#' @return
 #'
 #' @examples
 #'
