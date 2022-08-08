@@ -91,7 +91,8 @@ glm_studt = function(y,
                      mc_stepsize = 0.1,
                      mc_adapt_delta = 0.9,
                      mc_max_treedepth = 15,
-                     return_as_stanfit = FALSE) {
+                     return_as_stanfit = FALSE,
+                     seed = sample.int(.Machine$integer.max, 1)) {
 
 
   if(family != "gaussian" && family != "binomial") {
@@ -124,7 +125,8 @@ glm_studt = function(y,
         thin = mc_thin,
         step_size = mc_stepsize,
         adapt_delta = mc_adapt_delta,
-        max_treedepth = mc_max_treedepth));
+        max_treedepth = mc_max_treedepth,
+        seed = seed));
 
   if("simpleError"%in%class(curr_fit$value) || "error"%in%class(curr_fit$value)) {
     stop(curr_fit$value);

@@ -1,6 +1,6 @@
 Package: adaptBayes
 Title: Adaptive Bayesian Updates
-Version: 1.1.1
+Version: 1.1.2
 Authors@R: 
     c(
     person(given = "Philip", family = "Boonstra", role = c("aut"), email = "philb@umich.edu"),

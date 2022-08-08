@@ -147,7 +147,8 @@ glm_sab = function(y,
                    mc_max_treedepth = 15,
                    return_as_stanfit = FALSE,
                    eigendecomp_hist_var = NULL,
-                   scale_to_variance225 = NULL
+                   scale_to_variance225 = NULL,
+                   seed = sample.int(.Machine$integer.max, 1)
 ) {
 
   if(family != "gaussian" && family != "binomial") {
@@ -230,7 +231,8 @@ glm_sab = function(y,
         thin = mc_thin,
         step_size = mc_stepsize,
         adapt_delta = mc_adapt_delta,
-        max_treedepth = mc_max_treedepth))
+        max_treedepth = mc_max_treedepth,
+        seed = seed))
 
   if("simpleError"%in%class(curr_fit$value) || "error"%in%class(curr_fit$value)) {
     stop(curr_fit$value);
