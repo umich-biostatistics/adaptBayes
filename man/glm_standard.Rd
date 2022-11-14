@@ -24,7 +24,8 @@ glm_standard(
   mc_stepsize = 0.1,
   mc_adapt_delta = 0.9,
   mc_max_treedepth = 15,
-  return_as_stanfit = FALSE
+  return_as_stanfit = FALSE,
+  seed = sample.int(.Machine$integer.max, 1)
 )
 }
 \arguments{
@@ -99,6 +100,8 @@ were available but there is a desire to adjust for potentially different baselin
 
 \item{return_as_stanfit}{(logical) should the function return the stanfit
 object asis or should a summary of stanfit be returned as a regular list}
+
+\item{seed}{seed for the underlying STAN model to allow for reproducibility}
 }
 \value{
 \code{list} object containing the draws and other information.

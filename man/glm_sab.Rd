@@ -29,7 +29,8 @@ glm_sab(
   mc_max_treedepth = 15,
   return_as_stanfit = FALSE,
   eigendecomp_hist_var = NULL,
-  scale_to_variance225 = NULL
+  scale_to_variance225 = NULL,
+  seed = sample.int(.Machine$integer.max, 1)
 )
 }
 \arguments{
@@ -128,6 +129,8 @@ a p-length vector of eigenvalues. This is by default equal to eigen(alpha_prior_
 \item{scale_to_variance225}{a vector assumed to be such that, when multiplied
 by the diagonal elements of alpha_prior_cov, the result is a vector of
 elements each equal to 225. This is explicitly calculated if it is not provided}
+
+\item{seed}{seed for the underlying STAN model to allow for reproducibility}
 }
 \value{
 \code{list} object containing the draws and other information.
