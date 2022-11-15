@@ -254,7 +254,7 @@ glm_sab = function(y,
          theta_orig =  curr_fit$value$draws("theta_orig", format="matrix"),
          theta_aug = curr_fit$value$draws("theta_aug", format="matrix"),
          phi = curr_fit$value$draws("phi_copy", format="matrix")[, 1, drop = T],
-         eta = curr_fit$value$draws("eta", format="matrix")[, 1, drop = T]);
+         psi = curr_fit$value$draws("psi", format="matrix")[, 1, drop = T]);
   }
 }
 
