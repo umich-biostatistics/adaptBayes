@@ -46,8 +46,8 @@ all data should be standardized to have a common scale before model fitting.
 If regression coefficients on the natural scale are desired, they can be easily obtained
 through unstandardizing.}
 
-\item{family}{(character) Similar to argument in `glm` with the same name, but
- here this must be a character, and currently only 'binomial' (if y is binary) or
+\item{family}{(character) Similar to argument in \code{glm} with the same name, but
+here this must be a character, and currently only 'binomial' (if y is binary) or
 'gaussian' (if y is continuous) are valid choices.}
 
 \item{alpha_prior_mean}{(vector) p-length vector giving the mean of alpha from the
@@ -59,14 +59,14 @@ alpha from the historical analysis, corresponds to S_alpha in Boonstra and Barba
 \item{phi_dist}{(character) the name of the distribution to use as a prior on
 phi. This must be either 'trunc_norm' or 'beta'.}
 
-\item{phi_mean}{see `phi_sd`}
+\item{phi_mean}{see \code{phi_sd}}
 
 \item{phi_sd}{(real) prior mean and standard deviation of phi.
-At a minimum, phi_mean must be in [0,1] and phi_sd must be non-negative (you *can*
+At a minimum, phi_mean must be in \link{0,1} and phi_sd must be non-negative (you \emph{can}
 choose phi_sd = 0, meaning that phi is identically equal to phi_mean).
 If 'phi_dist' is 'trunc_norm', then 'phi_mean' and 'phi_sd'
-are interpreted as the parameters of the *untruncated* normal distribution and so are not actually
-the parameters of the resulting distribution after truncating phi to the [0,1] interval.
+are interpreted as the parameters of the \emph{untruncated} normal distribution and so are not actually
+the parameters of the resulting distribution after truncating phi to the \link{0,1} interval.
 If 'phi_dist' is 'beta', then 'phi_mean' and 'phi_sd' are interpreted as the literal mean and
 standard deviation, from which the shape parameters are calculated. When 'phi_dist'
 is 'beta', not all choices of 'phi_mean' and 'phi_sd' are valid, e.g. the standard
@@ -76,12 +76,12 @@ shape parameters is much less than 1. An error will be thrown if an invalid para
 is provided, and a warning will be thrown if a parameterization is provided
 that is likely to result in a "challenging" prior.}
 
-\item{beta_orig_scale}{see `beta_aug_scale`}
+\item{beta_orig_scale}{see \code{beta_aug_scale}}
 
 \item{beta_aug_scale}{(pos. real) constants indicating the prior scale of the
 horseshoe. Both values correspond to 'c / sigma' in the notation of Boonstra and Barbaro,
 because that paper never considers beta_orig_scale!=beta_aug_scale. Use
-the function `solve_for_hiershrink_scale` to calculate this quantity. If 'y'
+the function \code{solve_for_hiershrink_scale} to calculate this quantity. If 'y'
 is binary, then sigma doesn't actually exist as a
 parameter, and it will be set equal to 2 inside the function.
 If 'y' is continuous, then sigma is equipped with its own weak

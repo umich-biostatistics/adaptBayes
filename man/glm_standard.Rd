@@ -41,23 +41,23 @@ all data should be standardized to have a common scale before model fitting.
 If regression coefficients on the natural scale are desired, they be easily obtained
 through unstandardizing.}
 
-\item{family}{(character) Similar to argument in `glm` with the same name, but
- here this must be a character, and currently only 'binomial' (if y is binary) or
+\item{family}{(character) Similar to argument in \code{glm} with the same name, but
+here this must be a character, and currently only 'binomial' (if y is binary) or
 'gaussian' (if y is continuous) are valid choices.}
 
-\item{p}{see `q`}
+\item{p}{see \code{q}}
 
 \item{q}{(nonneg. integers) numbers, the sum of which add up to the number of columns
 in x_standardized. For the standard prior, this distinction is only needed if a different
 constant scale parameter (beta_orig_scale, beta_aug_scale), which is the constant 'c'
 in the notation of Boonstra and Barbaro, is used.}
 
-\item{beta_orig_scale}{see `beta_aug_scale`}
+\item{beta_orig_scale}{see \code{beta_aug_scale}}
 
 \item{beta_aug_scale}{(pos. real) constants indicating the prior scale of the
 horseshoe. Both values correspond to 'c / sigma' in the notation of Boonstra and Barbaro,
 because that paper never considers beta_orig_scale!=beta_aug_scale. Use
-the function `solve_for_hiershrink_scale` to calculate this quantity. If 'y'
+the function \code{solve_for_hiershrink_scale} to calculate this quantity. If 'y'
 is binary, then sigma doesn't actually exist as a
 parameter, and it will be set equal to 2 inside the function.
 If 'y' is continuous, then sigma is equipped with its own weak

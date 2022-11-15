@@ -30,7 +30,7 @@
 #' hyperpriors to calculate the Monte Carlo-based approximation of the expectation.
 #'
 #'
-#' @return A \code{list} containing the following named elements:
+#' @return A `list` containing the following named elements:
 #' \itemize{
 #'   \item{scale1}{the solution, interpreted as c / sigma}
 #'   \item{diff_from_target1}{the difference between the numerical value and the target, should be close to zero}

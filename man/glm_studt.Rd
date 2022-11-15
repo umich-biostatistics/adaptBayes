@@ -36,8 +36,8 @@ all data should be standardized to have a common scale before model fitting.
 If regression coefficients on the natural scale are desired, they be easily obtained
 through unstandardizing.}
 
-\item{family}{(character) Similar to argument in `glm` with the same name, but
- here this must be a character, and currently only 'binomial' (if y is binary) or
+\item{family}{(character) Similar to argument in \code{glm} with the same name, but
+here this must be a character, and currently only 'binomial' (if y is binary) or
 'gaussian' (if y is continuous) are valid choices.}
 
 \item{beta_scale}{(pos. real) constants indicating the prior scale of the student-t prior.}

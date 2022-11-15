@@ -35,7 +35,7 @@
 #' object asis or should a summary of stanfit be returned as a regular list
 #' @param seed seed for the underlying STAN model to allow for reproducibility
 #'
-#' @return \code{list} object containing the draws and other information.
+#' @return `list` object containing the draws and other information.
 #'
 #' @examples
 #'
@@ -127,7 +127,8 @@ glm_studt = function(y,
         step_size = mc_stepsize,
         adapt_delta = mc_adapt_delta,
         max_treedepth = mc_max_treedepth,
-        seed = seed));
+        seed = seed,
+        refresh = 0));
 
   if("simpleError"%in%class(curr_fit$value) || "error"%in%class(curr_fit$value)) {
     stop(curr_fit$value);

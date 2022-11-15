@@ -59,7 +59,7 @@
 #'
 #' @import cmdstanr dplyr
 #'
-#' @return \code{list} object containing the draws and other information.
+#' @return `list` object containing the draws and other information.
 #'
 #' @examples
 #'
@@ -171,7 +171,8 @@ glm_standard = function(y,
         step_size = mc_stepsize,
         adapt_delta = mc_adapt_delta,
         max_treedepth = mc_max_treedepth,
-        seed = seed))
+        seed = seed,
+        refresh = 0))
 
   if("simpleError"%in%class(curr_fit$value) || "error"%in%class(curr_fit$value)) {
     stop(curr_fit$value);

@@ -46,21 +46,21 @@ hyperpriors to calculate the Monte Carlo-based approximation of the expectation.
 \value{
 A \code{list} containing the following named elements:
 \itemize{
-  \item{scale1}{the solution, interpreted as c / sigma}
-  \item{diff_from_target1}{the difference between the numerical value and the target, should be close to zero}
-  \item{iter1}{number of iterations performed}
-  \item{prior_num1}{the resulting value of m_eff corresponding to this solution}
+\item{scale1}{the solution, interpreted as c / sigma}
+\item{diff_from_target1}{the difference between the numerical value and the target, should be close to zero}
+\item{iter1}{number of iterations performed}
+\item{prior_num1}{the resulting value of m_eff corresponding to this solution}
 }
 }
 \description{
 This function calculates a numerical-based solution to the quantity c / sigma in
 the equation at the end of first paragraph on page e50. It is intended to
 be provided as the value for beta_orig_scale and beta_aug_scale in the functions
-`glm_sab`, `glm_nab`, and `glm_standard`
+\code{glm_sab}, \code{glm_nab}, and \code{glm_standard}
 }
 \details{
 If the outcome of interest is binary, then sigma doesn't actually exist as a real
-parameter, and it will be set equal to 2 inside `glm_sab`,  `glm_nab`, or `glm_standard`.
+parameter, and it will be set equal to 2 inside \code{glm_sab},  \code{glm_nab}, or \code{glm_standard}.
 If the outcome of interest is continuous, then sigma is equipped with its own weak
 prior. In either case, it is not intended that the user scale by sigma "manually".
 }
