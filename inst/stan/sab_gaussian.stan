@@ -40,7 +40,7 @@ parameters {
   real mu;
   vector[p_stan] beta_raw_orig; // unscaled
   vector[q_stan] beta_raw_aug; // unscaled
-  real<lower = 0> eta;
+  // real<lower = 0> psi;
   real<lower = 0> tau_glob; // tau
   vector<lower = 0>[p_stan] lambda_orig;// lambda^o
   vector<lower = 0>[q_stan] lambda_aug; // lambda^a
@@ -67,7 +67,7 @@ transformed parameters {
   beta_orig = theta_orig .* beta_raw_orig;
   beta_aug = theta_aug .* beta_raw_aug;
   beta = append_row(beta_orig, beta_aug);
-  hist_orig_scale = 1 ./ sqrt(scale_to_variance225 * (1 - phi_copy) + phi_copy / eta);
+  hist_orig_scale = 1 ./ sqrt(scale_to_variance225 * (1 - phi_copy) + phi_copy);
   normalizing_cov = (quad_form_diag(alpha_prior_cov_stan,hist_orig_scale)) + tcrossprod(diag_post_multiply(aug_projection_stan,theta_aug));
   for(i in 1:p_stan) {
     normalizing_cov[i,i] = normalizing_cov[i,i] + theta_orig[i]^2;
@@ -77,7 +77,7 @@ transformed parameters {
 model {
   beta_raw_orig ~ normal(0.0, 1.0);
   beta_raw_aug ~ normal(0.0, 1.0);
-  eta ~ inv_gamma(2.5, 2.5);
+  //psi ~ lognormal(0, 0.4);
   tau_glob ~ student_t(global_dof_stan, 0.0, 1.0);
   lambda_orig ~ student_t(local_dof_stan, 0.0, beta_orig_scale_stan);
   lambda_aug ~ student_t(local_dof_stan, 0.0, beta_aug_scale_stan);
@@ -92,7 +92,7 @@ model {
   normalized_beta ~ normal(0.0, sqrt_eigenval_hist_var_stan);
   // Scaling normalized_beta to be independent ends up dropping a necessary determinant calculation: we add that back in here:
   target += -(1.0 * sum(log(hist_orig_scale)));
-  // Z_SAB (Normalizing constant)
+  // Z_SAB (Normalizing constant)1ÿ
   target += -(1.0 * multi_normal_lpdf(alpha_prior_mean_stan|zero_vec, normalizing_cov));
   if(only_prior == 0)
     y_stan ~ normal(mu + x_standardized_stan * beta, sigma);
