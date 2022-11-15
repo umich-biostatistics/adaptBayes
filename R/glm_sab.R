@@ -1,10 +1,7 @@
-#' Fit GLM with version 2 of the the 'sensible adaptive bayes' prior
+#' Fit GLM with the 'sensible adaptive bayes' prior
 #'
-#' Program for fitting a GLM equipped with version 2 of the 'sensible adaptive bayes'
-#' prior. Version 2 refers to \eqn{\beta^o + \bm P \beta^a \sim N(\psi m_\alpha, \psi^2 {\bm S}_\alpha / \phi)}
-#' (contrast to Version 1, the original SAB from Boonstra and Barbaro, which is
-#' implemented in  [glm_sab()] and
-#' which uses \eqn{\beta^o + \bm P \beta^a \sim N(m_\alpha, \eta {\bm S}_\alpha / \phi)})
+#' Program for fitting a GLM equipped with the 'sensible adaptive bayes' prior
+#' evaluated in the manuscript.
 #'
 #' @param y (vector) outcomes corresponding to the type of glm desired. This should
 #' match whatever datatype is expected by the stan program.
@@ -44,12 +41,6 @@
 #' shape parameters is much less than 1. An error will be thrown if an invalid parameterization
 #' is provided, and a warning will be thrown if a parameterization is provided
 #' that is likely to result in a "challenging" prior.
-#' @param psi_sd (real) prior standard deviation for psi, which is apriori
-#' distributed as a log-normal random variable with mean 0. If the link
-#' function is the identity function, i.e. `family = "gaussian"`, then the
-#' theory suggests that this should be equal to 1 and so you should choose
-#' psi_sd close to zero. For non-linear link functions,i.e. `family = "binomial"`,
-#' you should choose positive (but probably not too large) values for psi_sd.
 #' @param beta_orig_scale see `beta_aug_scale`
 #' @param beta_aug_scale (pos. real) constants indicating the prior scale of the
 #' horseshoe. Both values correspond to 'c / sigma' in the notation of Boonstra and Barbaro,
@@ -105,7 +96,7 @@
 #'                                   0.1209, 0.03683, -0.1517, 0.2178, 0.344, -0.1427),
 #'                          byrow = TRUE, nrow = 4);
 #'
-#' foo = glm_sab2(y = current$y_curr,
+#' foo = glm_sab(y = current$y_curr,
 #'               x_standardized = current[,2:11],
 #'               family = "binomial",
 #'               alpha_prior_mean = c(1.462, -1.660, 0.769, -0.756),
@@ -114,7 +105,6 @@
 #'               phi_dist = "trunc_norm",
 #'               phi_mean = 1,
 #'               phi_sd = 0.25,
-#'               psi_sd = 0.1,
 #'               beta_orig_scale = 0.0223,
 #'               beta_aug_scale = 0.0223,
 #'               local_dof = 1,
@@ -134,33 +124,32 @@
 #' @import cmdstanr dplyr
 #' @export
 
-glm_sab2 = function(y,
-                    x_standardized,
-                    family = "binomial",
-                    alpha_prior_mean,
-                    alpha_prior_cov,
-                    aug_projection,
-                    phi_dist,
-                    phi_mean,
-                    phi_sd,
-                    psi_sd,
-                    beta_orig_scale,
-                    beta_aug_scale,
-                    local_dof = 1,
-                    global_dof = 1,
-                    slab_precision = (1/15)^2,
-                    only_prior = F,
-                    mc_warmup = 50,
-                    mc_iter_after_warmup = 50,
-                    mc_chains = 1,
-                    mc_thin = 1,
-                    mc_stepsize = 0.1,
-                    mc_adapt_delta = 0.9,
-                    mc_max_treedepth = 15,
-                    return_as_stanfit = FALSE,
-                    eigendecomp_hist_var = NULL,
-                    scale_to_variance225 = NULL,
-                    seed = sample.int(.Machine$integer.max, 1)
+glm_sab = function(y,
+                   x_standardized,
+                   family = "binomial",
+                   alpha_prior_mean,
+                   alpha_prior_cov,
+                   aug_projection,
+                   phi_dist,
+                   phi_mean,
+                   phi_sd,
+                   beta_orig_scale,
+                   beta_aug_scale,
+                   local_dof = 1,
+                   global_dof = 1,
+                   slab_precision = (1/15)^2,
+                   only_prior = F,
+                   mc_warmup = 50,
+                   mc_iter_after_warmup = 50,
+                   mc_chains = 1,
+                   mc_thin = 1,
+                   mc_stepsize = 0.1,
+                   mc_adapt_delta = 0.9,
+                   mc_max_treedepth = 15,
+                   return_as_stanfit = FALSE,
+                   eigendecomp_hist_var = NULL,
+                   scale_to_variance225 = NULL,
+                   seed = sample.int(.Machine$integer.max, 1)
 ) {
 
   if(family != "gaussian" && family != "binomial") {
@@ -187,7 +176,6 @@ glm_sab2 = function(y,
 
   if(phi_mean < 0 || phi_mean > 1) {stop("'phi_mean' should be between 0 and 1")}
   if(phi_sd < 0) {stop("'phi_sd' must be non-negative")}
-  if(psi_sd < 0) {stop("'psi_sd' must be non-negative")}
 
   if(phi_dist == "beta") {
 
@@ -209,7 +197,7 @@ glm_sab2 = function(y,
   # Now we do the sampling in Stan
   model_file <-
     system.file("stan",
-                paste0("sab_", family, "2.stan"),
+                paste0("sab_", family, ".stan"),
                 package = "adaptBayes",
                 mustWork = TRUE)
   model <- cmdstanr::cmdstan_model(model_file)
@@ -236,7 +224,6 @@ glm_sab2 = function(y,
                     phi_prior_type = ifelse(phi_dist == "trunc_norm", 1L, 0L),
                     phi_mean_stan = phi_mean,
                     phi_sd_stan = phi_sd,
-                    psi_sd_stan = psi_sd,
                     only_prior = as.integer(only_prior)),
         iter_warmup = mc_warmup,
         iter = mc_iter_after_warmup,
@@ -267,7 +254,7 @@ glm_sab2 = function(y,
          theta_orig =  curr_fit$value$draws("theta_orig", format="matrix"),
          theta_aug = curr_fit$value$draws("theta_aug", format="matrix"),
          phi = curr_fit$value$draws("phi_copy", format="matrix")[, 1, drop = T],
-         psi = curr_fit$value$draws("psi_copy", format="matrix")[, 1, drop = T]);
+         eta = curr_fit$value$draws("eta", format="matrix")[, 1, drop = T]);
   }
 }
 
