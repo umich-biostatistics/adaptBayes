@@ -57,8 +57,8 @@ transformed parameters {
   vector<lower = 0,upper = sqrt(1/slab_precision_stan)>[q_stan] theta_aug;// theta
   vector<lower = 0>[p_stan] hist_orig_scale;//Diagonal of Gamma^{-1} in LHS of Eqn (S6)
   matrix[p_stan,p_stan] normalizing_cov;// S_alpha * hist_orig_scale  + Theta^o
-  real<lower = 0, upper = 1> phi_copy;// cto gracefully allow for zero-valued prior standard deviation
-  real<lower = 0, upper = 1> psi_copy;// to gracefully allow for zero-valued prior standard deviation
+  real<lower = 0, upper = 1> phi_copy;// to gracefully allow for zero-valued prior standard deviation
+  real<lower = 0> psi_copy;// to gracefully allow for zero-valued prior standard deviation
   if(phi_sd_stan > 0) {
     phi_copy = phi;
   } else {
@@ -98,7 +98,7 @@ model {
     phi ~ beta(phi_beta_shape1, phi_beta_shape2);
   }
   if(psi_sd_stan > 0) {
-    psi ~ lognormal(0, psi_sd_stan);
+    psi ~ lognormal(0.0, psi_sd_stan);
   }
   // Equation (S6) The next two lines together comprise the sensible adaptive prior contribution
   normalized_beta ~ normal(0.0, sqrt_eigenval_hist_var_stan);
@@ -106,6 +106,7 @@ model {
   target += -(1.0 * sum(log(hist_orig_scale)));
   // Z_SAB (Normalizing constant)
   target += -(1.0 * multi_normal_lpdf(psi_copy * alpha_prior_mean_stan|zero_vec, normalizing_cov));
-  if(only_prior == 0)
-  y_stan ~ bernoulli_logit(mu + x_standardized_stan * beta);
+  if(only_prior == 0) {
+    y_stan ~ bernoulli_logit(mu + x_standardized_stan * beta);
+  }
 }

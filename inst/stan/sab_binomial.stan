@@ -28,6 +28,9 @@ transformed data {
   real phi_mean_stan_trunc;
   real phi_sd_stan_trunc;
   zero_vec = rep_vector(0.0, p_stan);
+  // These next four lines will only be used if phi is beta distributed
+  // Depending on the values of phi_mean_stan or phi_sd_stan, the resulting
+  // shape parameters could give stan fits
   phi_mean_stan_trunc = fmax(1e-6, fmin(1 - 1e-6, phi_mean_stan));
   phi_sd_stan_trunc = fmax(1e-6, fmin(sqrt(phi_mean_stan_trunc * (1 - phi_mean_stan_trunc)) - 1e-6, phi_sd_stan));
   phi_beta_shape1 = phi_mean_stan_trunc * (phi_mean_stan_trunc * (1 - phi_mean_stan_trunc) / phi_sd_stan_trunc^2 - 1);
@@ -52,7 +55,7 @@ transformed parameters {
   vector<lower = 0,upper = sqrt(1/slab_precision_stan)>[q_stan] theta_aug;// theta
   vector<lower = 0>[p_stan] hist_orig_scale;//Diagonal of Gamma^{-1} in LHS of Eqn (S6)
   matrix[p_stan,p_stan] normalizing_cov;// S_alpha * hist_orig_scale  + Theta^o
-  real<lower = 0, upper = 1> phi_copy;// copy of phi
+  real<lower = 0, upper = 1> phi_copy;// to gracefully allow for zero-valued prior standard deviation
   if(phi_sd_stan > 0) {
     phi_copy = phi;
   } else {
@@ -93,6 +96,7 @@ model {
   target += -(1.0 * sum(log(hist_orig_scale)));
   // Z_SAB (Normalizing constant)
   target += -(1.0 * multi_normal_lpdf(alpha_prior_mean_stan|zero_vec, normalizing_cov));
-  if(only_prior == 0)
+  if(only_prior == 0) {
     y_stan ~ bernoulli_logit(mu + x_standardized_stan * beta);
+  }
 }
