@@ -1,4 +1,5 @@
-//Sensible Adaptive Bayes (stable version)
+//Sensible Adaptive Bayes for gaussian outcomes, version 2
+//Version 2 uses the psi formulation
 data {
   int<lower = 1> n_stan; // n_curr
   int<lower = 1> p_stan; // number of original covariates
@@ -19,6 +20,7 @@ data {
   int<lower = 0, upper = 1> phi_prior_type; //if 1, phi is apriori truncated normal; if 0, phi is apriori beta
   real<lower = 0, upper = 1> phi_mean_stan; //
   real<lower = 0> phi_sd_stan; //
+  real<lower = 0> psi_sd_stan; //
   int<lower = 0, upper = 1> only_prior;//if 1, ignore the model and data and generate from the prior only
 }
 transformed data {
@@ -56,28 +58,33 @@ transformed parameters {
   vector<lower = 0,upper = sqrt(1/slab_precision_stan)>[q_stan] theta_aug;// theta
   vector<lower = 0>[p_stan] hist_orig_scale;//Diagonal of Gamma^{-1} in LHS of Eqn (S6)
   matrix[p_stan,p_stan] normalizing_cov;// S_alpha * hist_orig_scale  + Theta^o
-  real<lower = 0, upper = 1> phi_copy;// copy of phi
+  real<lower = 0, upper = 1> phi_copy;// cto gracefully allow for zero-valued prior standard deviation
+  real<lower = 0, upper = 1> psi_copy;// to gracefully allow for zero-valued prior standard deviation
   if(phi_sd_stan > 0) {
     phi_copy = phi;
   } else {
     phi_copy = phi_mean_stan;
+  }
+  if(psi_sd_stan > 0) {
+    psi_copy = psi;
+  } else {
+    psi_copy = 1;
   }
   theta_orig = 1 ./ sqrt(slab_precision_stan + ((1 - phi_copy) ./ (tau_glob^2 * sigma^2 * square(lambda_orig))));
   theta_aug = 1 ./ sqrt(slab_precision_stan + (1 ./ (tau_glob^2 * sigma^2 * square(lambda_aug))));
   beta_orig = theta_orig .* beta_raw_orig;
   beta_aug = theta_aug .* beta_raw_aug;
   beta = append_row(beta_orig, beta_aug);
-  hist_orig_scale = 1 ./ sqrt(scale_to_variance225 * (1 - phi_copy) + phi_copy / psi^2);
+  hist_orig_scale = 1 ./ sqrt(scale_to_variance225 * (1 - phi_copy) + phi_copy / psi_copy^2);
   normalizing_cov = (quad_form_diag(alpha_prior_cov_stan,hist_orig_scale)) + tcrossprod(diag_post_multiply(aug_projection_stan,theta_aug));
   for(i in 1:p_stan) {
     normalizing_cov[i,i] = normalizing_cov[i,i] + theta_orig[i]^2;
   }
-  normalized_beta = eigenvec_hist_var_stan * (beta_orig + aug_projection_stan * beta_aug - psi * alpha_prior_mean_stan) ./ hist_orig_scale;
+  normalized_beta = eigenvec_hist_var_stan * (beta_orig + aug_projection_stan * beta_aug - psi_copy * alpha_prior_mean_stan) ./ hist_orig_scale;
 }
 model {
   beta_raw_orig ~ normal(0.0, 1.0);
   beta_raw_aug ~ normal(0.0, 1.0);
-  psi ~ lognormal(0, 0.4);
   tau_glob ~ student_t(global_dof_stan, 0.0, 1.0);
   lambda_orig ~ student_t(local_dof_stan, 0.0, beta_orig_scale_stan);
   lambda_aug ~ student_t(local_dof_stan, 0.0, beta_aug_scale_stan);
@@ -87,13 +94,16 @@ model {
   } else if(phi_sd_stan > 0 && phi_prior_type == 0) {
     phi ~ beta(phi_beta_shape1, phi_beta_shape2);
   }
+  if(psi_sd_stan > 0) {
+    psi ~ lognormal(0, psi_sd_stan);
+  }
   sigma ~ student_t(1, 0.0, 5.0);
   // Equation (S6) The next two lines together comprise the sensible adaptive prior contribution
   normalized_beta ~ normal(0.0, sqrt_eigenval_hist_var_stan);
   // Scaling normalized_beta to be independent ends up dropping a necessary determinant calculation: we add that back in here:
   target += -(1.0 * sum(log(hist_orig_scale)));
-  // Z_SAB (Normalizing constant)1ÿ
-  target += -(1.0 * multi_normal_lpdf(psi * alpha_prior_mean_stan|zero_vec, normalizing_cov));
+  // Z_SAB (Normalizing constant)
+  target += -(1.0 * multi_normal_lpdf(psi_copy * alpha_prior_mean_stan|zero_vec, normalizing_cov));
   if(only_prior == 0)
-    y_stan ~ normal(mu + x_standardized_stan * beta, sigma);
+  y_stan ~ normal(mu + x_standardized_stan * beta, sigma);
 }
