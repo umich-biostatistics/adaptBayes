@@ -71,21 +71,21 @@ phi. This must be either 'trunc_norm' or 'beta'.}
 \item{phi_mean}{see \code{phi_sd}}
 
 \item{phi_sd}{(real) prior mean and standard deviation of phi. At a minimum,
-phi_mean must be in \link{0,1} and phi_sd must be non-negative (you \emph{can} choose
-phi_sd = 0, meaning that phi is identically equal to phi_mean). If
-'phi_dist' is 'trunc_norm', then 'phi_mean' and 'phi_sd' are interpreted as
-the parameters of the \emph{untruncated} normal distribution and so are not
-actually the parameters of the resulting distribution after truncating phi
-to the \link{0,1} interval. If 'phi_dist' is 'beta', then 'phi_mean' and
-'phi_sd' are interpreted as the literal mean and standard deviation, from
-which the shape parameters are calculated. When 'phi_dist' is 'beta', not
-all choices of 'phi_mean' and 'phi_sd' are valid, e.g. the standard
-deviation of the beta distribution must be no greater than sqrt(phi_mean *
-(1 - phi_mean)). Also, the beta distribution is difficult to sample from if
-one or both of the shape parameters is much less than 1. An error will be
-thrown if an invalid parameterization is provided, and a warning will be
-thrown if a parameterization is provided that is likely to result in a
-"challenging" prior.}
+phi_mean must be between 0 and 1 (inclusive) and phi_sd must be
+non-negative (you \emph{can} choose phi_sd = 0, meaning that phi is identically
+equal to phi_mean). If 'phi_dist' is 'trunc_norm', then 'phi_mean' and
+'phi_sd' are interpreted as the parameters of the \emph{untruncated} normal
+distribution and so are not actually the parameters of the resulting
+distribution after truncating phi to the 0,1 interval. If 'phi_dist' is
+'beta', then 'phi_mean' and 'phi_sd' are interpreted as the literal mean
+and standard deviation, from which the shape parameters are calculated.
+When 'phi_dist' is 'beta', not all choices of 'phi_mean' and 'phi_sd' are
+valid, e.g. the standard deviation of the beta distribution must be no
+greater than sqrt(phi_mean * (1 - phi_mean)). Also, the beta distribution
+is difficult to sample from if one or both of the shape parameters is much
+less than 1. An error will be thrown if an invalid parameterization is
+provided, and a warning will be thrown if a parameterization is provided
+that is likely to result in a "challenging" prior.}
 
 \item{psi_sd}{(real) prior standard deviation for psi, which is apriori
 distributed as a log-normal random variable with mean 0. If the link
@@ -153,12 +153,12 @@ provided}
 \code{list} object containing the draws and other information.
 }
 \description{
-Program for fitting a GLM equipped with version 2 of the 'sensible adaptive
-bayes' prior. Version 2 refers to \eqn{\beta^o + \bm P \beta^a \sim N(\psi
-m_\alpha, \psi^2 {\bm S}_\alpha / \phi)} (contrast to Version 1, the original
-SAB from Boonstra and Barbaro, which is implemented in \code{\link[=glm_sab]{glm_sab()}} and which
-uses \eqn{\beta^o + \bm P \beta^a \sim N(m_\alpha, \eta {\bm S}_\alpha /
-\phi)})
+Program for fitting a GLM equipped with the yet-unpublished version 2 of the
+'sensible adaptive bayes' prior. Version 2 refers to \eqn{\beta^o + \bm P
+\beta^a \sim N(\psi m_\alpha, \psi^2 {\bm S}_\alpha / \phi)} (contrast to
+Version 1, the original SAB from Boonstra and Barbaro, which is implemented
+in \code{\link[=glm_sab]{glm_sab()}} and which uses \eqn{\beta^o + \bm P \beta^a \sim
+N(m_\alpha, \eta {\bm S}_\alpha / \phi)})
 }
 \examples{
 

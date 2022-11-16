@@ -19,6 +19,7 @@ data {
   int<lower = 0, upper = 1> phi_prior_type; //if 1, phi is apriori truncated normal; if 0, phi is apriori beta
   real<lower = 0, upper = 1> phi_mean_stan; //
   real<lower = 0> phi_sd_stan; //
+  real<lower = 0> eta_param_stan; //
   int<lower = 0, upper = 1> only_prior;//if 1, ignore the model and data and generate from the prior only
 }
 transformed data {
@@ -56,17 +57,23 @@ transformed parameters {
   vector<lower = 0>[p_stan] hist_orig_scale;//Diagonal of Gamma^{-1} in LHS of Eqn (S6)
   matrix[p_stan,p_stan] normalizing_cov;// S_alpha * hist_orig_scale  + Theta^o
   real<lower = 0, upper = 1> phi_copy;// to gracefully allow for zero-valued prior standard deviation
+  real<lower = 0> eta_copy;// to gracefully allow for point mass on 1
   if(phi_sd_stan > 0) {
     phi_copy = phi;
   } else {
     phi_copy = phi_mean_stan;
+  }
+  if(!is_inf(eta_param_stan)) {
+    eta_copy = eta;
+  } else {
+    eta_copy = 1;
   }
   theta_orig = 1 ./ sqrt(slab_precision_stan + ((1 - phi_copy) ./ (tau_glob^2 * square(lambda_orig))));
   theta_aug = 1 ./ sqrt(slab_precision_stan + (1 ./ (tau_glob^2 * square(lambda_aug))));
   beta_orig = theta_orig .* beta_raw_orig;
   beta_aug = theta_aug .* beta_raw_aug;
   beta = append_row(beta_orig, beta_aug);
-  hist_orig_scale = 1 ./ sqrt(scale_to_variance225 * (1 - phi_copy) + phi_copy / eta);
+  hist_orig_scale = 1 ./ sqrt(scale_to_variance225 * (1 - phi_copy) + phi_copy / eta_copy);
   normalizing_cov = (quad_form_diag(alpha_prior_cov_stan,hist_orig_scale)) + tcrossprod(diag_post_multiply(aug_projection_stan,theta_aug));
   for(i in 1:p_stan) {
     normalizing_cov[i,i] = normalizing_cov[i,i] + theta_orig[i]^2;
@@ -76,7 +83,12 @@ transformed parameters {
 model {
   beta_raw_orig ~ normal(0.0, 1.0);
   beta_raw_aug ~ normal(0.0, 1.0);
-  eta ~ inv_gamma(2.5, 2.5);
+  if(!is_inf(eta_param_stan)) {
+    eta ~ inv_gamma(eta_param_stan, eta_param_stan);
+  } else {
+    // eta is not used in this case but we need a proper prior to avoid sampling issues
+    eta ~ inv_gamma(1.0, 1.0);
+  }
   tau_glob ~ student_t(global_dof_stan, 0.0, 1.0);
   // The 2.0 scaler below represents the contribution from "sigma", which
   // isn't really a parameter in a logistic glm but follows the maximum variance

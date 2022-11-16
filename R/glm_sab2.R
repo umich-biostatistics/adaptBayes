@@ -35,21 +35,21 @@
 #'   phi. This must be either 'trunc_norm' or 'beta'.
 #' @param phi_mean see `phi_sd`
 #' @param phi_sd (real) prior mean and standard deviation of phi. At a minimum,
-#'   phi_mean must be in [0,1] and phi_sd must be non-negative (you *can* choose
-#'   phi_sd = 0, meaning that phi is identically equal to phi_mean). If
-#'   'phi_dist' is 'trunc_norm', then 'phi_mean' and 'phi_sd' are interpreted as
-#'   the parameters of the *untruncated* normal distribution and so are not
-#'   actually the parameters of the resulting distribution after truncating phi
-#'   to the [0,1] interval. If 'phi_dist' is 'beta', then 'phi_mean' and
-#'   'phi_sd' are interpreted as the literal mean and standard deviation, from
-#'   which the shape parameters are calculated. When 'phi_dist' is 'beta', not
-#'   all choices of 'phi_mean' and 'phi_sd' are valid, e.g. the standard
-#'   deviation of the beta distribution must be no greater than sqrt(phi_mean *
-#'   (1 - phi_mean)). Also, the beta distribution is difficult to sample from if
-#'   one or both of the shape parameters is much less than 1. An error will be
-#'   thrown if an invalid parameterization is provided, and a warning will be
-#'   thrown if a parameterization is provided that is likely to result in a
-#'   "challenging" prior.
+#'   phi_mean must be between 0 and 1 (inclusive) and phi_sd must be
+#'   non-negative (you *can* choose phi_sd = 0, meaning that phi is identically
+#'   equal to phi_mean). If 'phi_dist' is 'trunc_norm', then 'phi_mean' and
+#'   'phi_sd' are interpreted as the parameters of the *untruncated* normal
+#'   distribution and so are not actually the parameters of the resulting
+#'   distribution after truncating phi to the 0,1 interval. If 'phi_dist' is
+#'   'beta', then 'phi_mean' and 'phi_sd' are interpreted as the literal mean
+#'   and standard deviation, from which the shape parameters are calculated.
+#'   When 'phi_dist' is 'beta', not all choices of 'phi_mean' and 'phi_sd' are
+#'   valid, e.g. the standard deviation of the beta distribution must be no
+#'   greater than sqrt(phi_mean * (1 - phi_mean)). Also, the beta distribution
+#'   is difficult to sample from if one or both of the shape parameters is much
+#'   less than 1. An error will be thrown if an invalid parameterization is
+#'   provided, and a warning will be thrown if a parameterization is provided
+#'   that is likely to result in a "challenging" prior.
 #' @param psi_sd (real) prior standard deviation for psi, which is apriori
 #'   distributed as a log-normal random variable with mean 0. If the link
 #'   function is the identity function, i.e. `family = "gaussian"`, then the
@@ -216,11 +216,10 @@ glm_sab2 = function(y,
     stop("'phi_dist' must equal 'trunc_norm' or 'beta'")
   }
 
-
   # Now we do the sampling in Stan
   model_file <-
     system.file("stan",
-                paste0("sab_", family, "2.stan"),
+                paste0("sab2_", family, ".stan"),
                 package = "adaptBayes",
                 mustWork = TRUE)
   model <- cmdstanr::cmdstan_model(model_file)

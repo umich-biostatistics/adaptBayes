@@ -99,6 +99,9 @@ model {
   }
   if(psi_sd_stan > 0) {
     psi ~ lognormal(0.0, psi_sd_stan);
+  } else {
+    // psi is not used in this case but we need a proper prior to avoid sampling issues
+    psi ~ lognormal(0.0, 1.0);
   }
   // Equation (S6) The next two lines together comprise the sensible adaptive prior contribution
   normalized_beta ~ normal(0.0, sqrt_eigenval_hist_var_stan);
