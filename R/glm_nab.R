@@ -208,11 +208,20 @@ glm_nab = function(y,
   }
 
   # Now we do the sampling in Stan
-  model_file <-
-    system.file("stan",
-                paste0("nab_", family, ".stan"),
-                package = "adaptBayes",
-                mustWork = TRUE)
+  if(phi_mean == 1 && phi_sd == 0 && eta_param == 0) {
+    model_file <-
+      system.file("stan",
+                  paste0("nab_simple", family, ".stan"),
+                  package = "adaptBayes",
+                  mustWork = TRUE)
+  } else {
+    model_file <-
+      system.file("stan",
+                  paste0("nab_", family, ".stan"),
+                  package = "adaptBayes",
+                  mustWork = TRUE)
+  }
+
   model <- cmdstanr::cmdstan_model(model_file)
 
 
@@ -263,14 +272,21 @@ glm_nab = function(y,
     model_diagnostics <- curr_fit$value$sampler_diagnostics()
     model_summary <- curr_fit$value$summary()
 
+    if(phi_mean == 1 && phi_sd == 0 && eta_param == 0) {
+      phi = rep(1, mc_iter_after_warmup);
+      eta = rep(1, mc_iter_after_warmup);
+    } else {
+      phi = curr_fit$value$draws("phi_copy", format="matrix")[, 1, drop = T];
+      eta = curr_fit$value$draws("eta_copy", format="matrix")[, 1, drop = T];
+    }
+
     list(num_divergences = sum(model_diagnostics[,,"divergent__"]),
          max_rhat = max(model_summary$rhat, na.rm=T),
          curr_beta0 = curr_fit$value$draws("mu", format="matrix")[, 1, drop = T],
          curr_beta = curr_fit$value$draws("beta", format="matrix"),
          theta_orig =  curr_fit$value$draws("theta_orig", format="matrix"),
          theta_aug = curr_fit$value$draws("theta_aug", format="matrix"),
-         phi = curr_fit$value$draws("phi_copy", format="matrix")[, 1, drop = T],
-         eta = curr_fit$value$draws("eta_copy", format="matrix")[, 1, drop = T]);
-
+         phi = phi,
+         eta = eta);
   }
 }

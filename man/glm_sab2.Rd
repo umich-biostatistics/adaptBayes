@@ -11,10 +11,11 @@ glm_sab2(
   alpha_prior_mean,
   alpha_prior_cov,
   aug_projection,
-  phi_dist,
-  phi_mean,
-  phi_sd,
-  psi_sd,
+  phi_dist = "trunc_norm",
+  phi_mean = 1,
+  phi_sd = 0.25,
+  psi_mean = 0,
+  psi_sd = 0.25,
   beta_orig_scale,
   beta_aug_scale,
   local_dof = 1,
@@ -87,12 +88,16 @@ less than 1. An error will be thrown if an invalid parameterization is
 provided, and a warning will be thrown if a parameterization is provided
 that is likely to result in a "challenging" prior.}
 
-\item{psi_sd}{(real) prior standard deviation for psi, which is apriori
-distributed as a log-normal random variable with mean 0. If the link
-function is the identity function, i.e. \code{family = "gaussian"}, then the
-theory suggests that this should be equal to 1 and so you should choose
-psi_sd close to zero. For non-linear link functions,i.e. \code{family = "binomial"}, you should choose positive (but probably not too large) values
-for psi_sd.}
+\item{psi_mean}{see \code{psi_sd}}
+
+\item{psi_sd}{(real) prior mean and standard deviation for psi, which is
+apriori distributed as a log-normal random variable. The log-normal is
+parametrized such that these are the mean and normal of the log of the
+random variable, not the random variable itsef. If the link function is the
+identity function, i.e. \code{family = "gaussian"}, then the theory suggests
+that this should be equal to 1 and so you should choose psi_mean and psi_sd
+close to zero. For non-linear link functions,i.e. \code{family = "binomial"},
+you should choose positive (but probably not too large) values for psi_sd.}
 
 \item{beta_orig_scale}{see \code{beta_aug_scale}}
 
@@ -187,7 +192,8 @@ foo = glm_sab2(y = current$y_curr,
               phi_dist = "trunc_norm",
               phi_mean = 1,
               phi_sd = 0.25,
-              psi_sd = 0.1,
+              psi_mean = 0,
+              psi_sd = 0.25,
               beta_orig_scale = 0.0223,
               beta_aug_scale = 0.0223,
               local_dof = 1,

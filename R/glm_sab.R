@@ -212,11 +212,19 @@ glm_sab = function(y,
   }
 
   # Now we do the sampling in Stan
-  model_file <-
-    system.file("stan",
-                paste0("sab_", family, ".stan"),
-                package = "adaptBayes",
-                mustWork = TRUE)
+  if(phi_mean == 1 && phi_sd == 0 && eta_param == 0) {
+    model_file <-
+      system.file("stan",
+                  paste0("sab_simple", family, ".stan"),
+                  package = "adaptBayes",
+                  mustWork = TRUE)
+  } else {
+    model_file <-
+      system.file("stan",
+                  paste0("sab_", family, ".stan"),
+                  package = "adaptBayes",
+                  mustWork = TRUE)
+  }
   model <- cmdstanr::cmdstan_model(model_file)
 
   curr_fit <-
@@ -265,6 +273,14 @@ glm_sab = function(y,
 
     model_diagnostics <- curr_fit$value$sampler_diagnostics()
     model_summary <- curr_fit$value$summary()
+
+    if(phi_mean == 1 && phi_sd == 0 && eta_param == 0) {
+      phi = rep(1, mc_iter_after_warmup);
+      eta = rep(1, mc_iter_after_warmup);
+    } else {
+      phi = curr_fit$value$draws("phi_copy", format="matrix")[, 1, drop = T];
+      eta = curr_fit$value$draws("eta_copy", format="matrix")[, 1, drop = T];
+    }
 
     list(num_divergences = sum(model_diagnostics[,,"divergent__"]),
          max_rhat = max(model_summary$rhat, na.rm=T),

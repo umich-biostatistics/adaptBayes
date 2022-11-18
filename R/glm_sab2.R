@@ -50,13 +50,15 @@
 #'   less than 1. An error will be thrown if an invalid parameterization is
 #'   provided, and a warning will be thrown if a parameterization is provided
 #'   that is likely to result in a "challenging" prior.
-#' @param psi_sd (real) prior standard deviation for psi, which is apriori
-#'   distributed as a log-normal random variable with mean 0. If the link
-#'   function is the identity function, i.e. `family = "gaussian"`, then the
-#'   theory suggests that this should be equal to 1 and so you should choose
-#'   psi_sd close to zero. For non-linear link functions,i.e. `family =
-#'   "binomial"`, you should choose positive (but probably not too large) values
-#'   for psi_sd.
+#' @param psi_mean see `psi_sd`
+#' @param psi_sd (real) prior mean and standard deviation for psi, which is
+#'   apriori distributed as a log-normal random variable. The log-normal is
+#'   parametrized such that these are the mean and normal of the log of the
+#'   random variable, not the random variable itsef. If the link function is the
+#'   identity function, i.e. `family = "gaussian"`, then the theory suggests
+#'   that this should be equal to 1 and so you should choose psi_mean and psi_sd
+#'   close to zero. For non-linear link functions,i.e. `family = "binomial"`,
+#'   you should choose positive (but probably not too large) values for psi_sd.
 #' @param beta_orig_scale see `beta_aug_scale`
 #' @param beta_aug_scale (pos. real) constants indicating the prior scale of the
 #'   horseshoe. Both values correspond to 'c / sigma' in the notation of
@@ -125,7 +127,8 @@
 #'               phi_dist = "trunc_norm",
 #'               phi_mean = 1,
 #'               phi_sd = 0.25,
-#'               psi_sd = 0.1,
+#'               psi_mean = 0,
+#'               psi_sd = 0.25,
 #'               beta_orig_scale = 0.0223,
 #'               beta_aug_scale = 0.0223,
 #'               local_dof = 1,
@@ -151,10 +154,11 @@ glm_sab2 = function(y,
                     alpha_prior_mean,
                     alpha_prior_cov,
                     aug_projection,
-                    phi_dist,
-                    phi_mean,
-                    phi_sd,
-                    psi_sd,
+                    phi_dist = "trunc_norm",
+                    phi_mean = 1,
+                    phi_sd = 0.25,
+                    psi_mean = 0,
+                    psi_sd = 0.25,
                     beta_orig_scale,
                     beta_aug_scale,
                     local_dof = 1,
@@ -217,11 +221,20 @@ glm_sab2 = function(y,
   }
 
   # Now we do the sampling in Stan
-  model_file <-
-    system.file("stan",
-                paste0("sab2_", family, ".stan"),
-                package = "adaptBayes",
-                mustWork = TRUE)
+  # Now we do the sampling in Stan
+  if(phi_mean == 1 && phi_sd == 0 && psi_mean == 0 && psi_sd == 0) {
+    model_file <-
+      system.file("stan",
+                  paste0("sab2_simple", family, ".stan"),
+                  package = "adaptBayes",
+                  mustWork = TRUE)
+  } else {
+    model_file <-
+      system.file("stan",
+                  paste0("sab2_", family, ".stan"),
+                  package = "adaptBayes",
+                  mustWork = TRUE)
+  }
   model <- cmdstanr::cmdstan_model(model_file)
 
   curr_fit <-
@@ -246,6 +259,7 @@ glm_sab2 = function(y,
                     phi_prior_type = ifelse(phi_dist == "trunc_norm", 1L, 0L),
                     phi_mean_stan = phi_mean,
                     phi_sd_stan = phi_sd,
+                    psi_mean_stan = psi_mean,
                     psi_sd_stan = psi_sd,
                     only_prior = as.integer(only_prior)),
         iter_warmup = mc_warmup,
@@ -271,14 +285,22 @@ glm_sab2 = function(y,
     model_diagnostics <- curr_fit$value$sampler_diagnostics()
     model_summary <- curr_fit$value$summary()
 
+    if(phi_mean == 1 && phi_sd == 0 && psi_sd == 0) {
+      phi = rep(1, mc_iter_after_warmup);
+      psi = rep(1, mc_iter_after_warmup);
+    } else {
+      phi = curr_fit$value$draws("phi_copy", format="matrix")[, 1, drop = T];
+      psi = curr_fit$value$draws("eta_copy", format="matrix")[, 1, drop = T];
+    }
+
     list(num_divergences = sum(model_diagnostics[,,"divergent__"]),
          max_rhat = max(model_summary$rhat, na.rm=T),
          curr_beta0 = curr_fit$value$draws("mu", format="matrix")[, 1, drop = T],
          curr_beta = curr_fit$value$draws("beta", format="matrix"),
          theta_orig =  curr_fit$value$draws("theta_orig", format="matrix"),
          theta_aug = curr_fit$value$draws("theta_aug", format="matrix"),
-         phi = curr_fit$value$draws("phi_copy", format="matrix")[, 1, drop = T],
-         psi = curr_fit$value$draws("psi_copy", format="matrix")[, 1, drop = T]);
+         phi = phi,
+         psi = psi);
   }
 }
 
