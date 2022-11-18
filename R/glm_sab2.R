@@ -225,7 +225,7 @@ glm_sab2 = function(y,
   if(phi_mean == 1 && phi_sd == 0 && psi_mean == 0 && psi_sd == 0) {
     model_file <-
       system.file("stan",
-                  paste0("sab2_simple", family, ".stan"),
+                  paste0("sab2_simple_", family, ".stan"),
                   package = "adaptBayes",
                   mustWork = TRUE)
   } else {
