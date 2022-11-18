@@ -140,9 +140,9 @@ glm_nab = function(y,
                    family = "binomial",
                    alpha_prior_mean,
                    alpha_prior_cov,
-                   phi_dist,
-                   phi_mean,
-                   phi_sd,
+                   phi_dist = "trunc_norm",
+                   phi_mean = 1,
+                   phi_sd = 0.25,
                    eta_param = 2.5,
                    beta_orig_scale,
                    beta_aug_scale,
@@ -208,7 +208,7 @@ glm_nab = function(y,
   }
 
   # Now we do the sampling in Stan
-  if(phi_mean == 1 && phi_sd == 0 && eta_param == 0) {
+  if(phi_mean == 1 && phi_sd == 0 && is.infinite(eta_param)) {
     model_file <-
       system.file("stan",
                   paste0("nab_simple_", family, ".stan"),
@@ -272,7 +272,7 @@ glm_nab = function(y,
     model_diagnostics <- curr_fit$value$sampler_diagnostics()
     model_summary <- curr_fit$value$summary()
 
-    if(phi_mean == 1 && phi_sd == 0 && eta_param == 0) {
+    if(phi_mean == 1 && phi_sd == 0 && is.infinite(eta_param)) {
       phi = rep(1, mc_iter_after_warmup);
       eta = rep(1, mc_iter_after_warmup);
     } else {
