@@ -288,8 +288,8 @@ glm_sab = function(y,
          curr_beta = curr_fit$value$draws("beta", format="matrix"),
          theta_orig =  curr_fit$value$draws("theta_orig", format="matrix"),
          theta_aug = curr_fit$value$draws("theta_aug", format="matrix"),
-         phi = curr_fit$value$draws("phi_copy", format="matrix")[, 1, drop = T],
-         eta = curr_fit$value$draws("eta_copy", format="matrix")[, 1, drop = T]);
+         phi = phi,
+         eta = eta);
   }
 }
 
