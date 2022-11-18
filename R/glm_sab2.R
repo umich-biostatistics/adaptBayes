@@ -290,7 +290,7 @@ glm_sab2 = function(y,
       psi = rep(1, mc_iter_after_warmup);
     } else {
       phi = curr_fit$value$draws("phi_copy", format="matrix")[, 1, drop = T];
-      psi = curr_fit$value$draws("eta_copy", format="matrix")[, 1, drop = T];
+      psi = curr_fit$value$draws("psi_copy", format="matrix")[, 1, drop = T];
     }
 
     list(num_divergences = sum(model_diagnostics[,,"divergent__"]),
