@@ -19,7 +19,8 @@ data {
   int<lower = 0, upper = 1> phi_prior_type; //if 1, phi is apriori truncated normal; if 0, phi is apriori beta
   real<lower = 0, upper = 1> phi_mean_stan; //
   real<lower = 0> phi_sd_stan; //
-  real<lower = 0> eta_param_stan; //
+  real<lower = 0> eta_param_stan; // eta ~ IG(eta_param_stan, eta_param_stan)
+  real<lower = 0> mu_sd_stan; // prior standard deviation on intercept
   int<lower = 0, upper = 1> only_prior;//if 1, ignore the model and data and generate from the prior only
 }
 transformed data {
@@ -96,7 +97,7 @@ model {
   // of the scale parameter
   lambda_orig ~ student_t(local_dof_stan, 0.0, 2.0 * beta_orig_scale_stan);
   lambda_aug ~ student_t(local_dof_stan, 0.0, 2.0 * beta_aug_scale_stan);
-  mu ~ logistic(0.0, 5.0);
+  mu ~ logistic(0.0, mu_sd_stan);
   if(phi_sd_stan > 0 && phi_prior_type == 1) {
     phi ~ normal(phi_mean_stan, phi_sd_stan);
   } else if(phi_sd_stan > 0 && phi_prior_type == 0) {

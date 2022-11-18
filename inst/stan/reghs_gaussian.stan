@@ -10,7 +10,8 @@ data {
   real<lower = 0> beta_orig_scale_stan; // c, Section 2
   real<lower = 0> beta_aug_scale_stan; // c, Section 2
   real<lower = 0> slab_precision_stan; // 1/d^2, Section 2
-  vector<lower = 0,upper = 1>[n_stan] intercept_offset_stan;//allow for up to two intercepts
+  real<lower = 0> mu_sd_stan; // prior standard deviation on main intercept
+  vector<lower = 0,upper = 1>[n_stan] intercept_offset_stan;//allow for two intercepts
   int<lower = 0,upper = 1> only_prior;//if 1, ignore the model and data and generate from the prior only
 }
 parameters {
@@ -36,8 +37,8 @@ model {
   lambda_orig ~ student_t(local_dof_stan, 0.0, beta_orig_scale_stan);
   lambda_aug ~ student_t(local_dof_stan, 0.0, beta_aug_scale_stan);
   sigma ~ student_t(1, 0.0, 5.0);
-  mu ~ logistic(0.0, 5.0);
-  mu_offset ~ logistic(0.0, 2.5);
+  mu ~ logistic(0.0, mu_sd_stan);
+  mu_offset ~ logistic(0.0, mu_sd_stan / 2);
   if(only_prior == 0)
     y_stan ~ normal(mu + intercept_offset_stan * mu_offset + x_standardized_stan * beta, sigma);
 }

@@ -7,6 +7,7 @@ data {
   real<lower = 0> dof_stan;
   real<lower = 0> beta_scale_stan;
   real<lower = 0> slab_precision_stan; // 1/sqrt(slab_precision_stan) is the maximum possible scale
+  real<lower = 0> mu_sd_stan; // prior standard deviation on main intercept
   int<lower = 0,upper = 1> only_prior;//if 1, ignore the model and data
 }
 parameters {
@@ -28,7 +29,7 @@ model {
   // assumption that Pirronen et al. suggest in their discussion on the choice
   // of the scale parameter
   lambda_scale_sq ~ inv_gamma(dof_stan/2.0, dof_stan);
-  mu ~ logistic(0.0, 5.0);
+  mu ~ logistic(0.0, mu_sd_stan);
   if(only_prior == 0)
     y_stan ~ bernoulli_logit(mu + x_standardized_stan * beta);
 }

@@ -77,6 +77,8 @@
 #'   value to tell the function that there is no global hyperparameter.
 #' @param slab_precision (pos. real) the slab-part of the regularized horseshoe,
 #'   this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro
+#' @param mu_sd (pos. real) the prior standard deviation for the intercept
+#'   parameter mu
 #' @param only_prior (logical) should all data be ignored, sampling only from
 #'   the prior?
 #' @param mc_warmup number of MCMC warm-up iterations
@@ -134,6 +136,7 @@
 #'               local_dof = 1,
 #'               global_dof = 1,
 #'               slab_precision = 0.00444,
+#'               mu_sd = 5,
 #'               only_prior = 0,
 #'               mc_warmup = 1000,
 #'               mc_iter_after_warmup = 1000,
@@ -164,9 +167,10 @@ glm_sab2 = function(y,
                     local_dof = 1,
                     global_dof = 1,
                     slab_precision = (1/15)^2,
+                    mu_sd = 5,
                     only_prior = F,
-                    mc_warmup = 50,
-                    mc_iter_after_warmup = 50,
+                    mc_warmup = 1e3,
+                    mc_iter_after_warmup = 1e3,
                     mc_chains = 1,
                     mc_thin = 1,
                     mc_stepsize = 0.1,
@@ -203,6 +207,7 @@ glm_sab2 = function(y,
   if(phi_mean < 0 || phi_mean > 1) {stop("'phi_mean' should be between 0 and 1")}
   if(phi_sd < 0) {stop("'phi_sd' must be non-negative")}
   if(psi_sd < 0) {stop("'psi_sd' must be non-negative")}
+  if(mu_sd < 0) {stop("'mu_sd' must be non-negative")}
 
   if(phi_dist == "beta") {
 
@@ -220,7 +225,6 @@ glm_sab2 = function(y,
     stop("'phi_dist' must equal 'trunc_norm' or 'beta'")
   }
 
-  # Now we do the sampling in Stan
   # Now we do the sampling in Stan
   if(phi_mean == 1 && phi_sd == 0 && psi_mean == 0 && psi_sd == 0) {
     model_file <-
@@ -261,6 +265,7 @@ glm_sab2 = function(y,
                     phi_sd_stan = phi_sd,
                     psi_mean_stan = psi_mean,
                     psi_sd_stan = psi_sd,
+                    mu_sd_stan = mu_sd,
                     only_prior = as.integer(only_prior)),
         iter_warmup = mc_warmup,
         iter = mc_iter_after_warmup,
@@ -295,8 +300,8 @@ glm_sab2 = function(y,
 
     list(num_divergences = sum(model_diagnostics[,,"divergent__"]),
          max_rhat = max(model_summary$rhat, na.rm=T),
-         curr_beta0 = curr_fit$value$draws("mu", format="matrix")[, 1, drop = T],
-         curr_beta = curr_fit$value$draws("beta", format="matrix"),
+         mu = curr_fit$value$draws("mu", format="matrix")[, 1, drop = T],
+         beta = curr_fit$value$draws("beta", format="matrix"),
          theta_orig =  curr_fit$value$draws("theta_orig", format="matrix"),
          theta_aug = curr_fit$value$draws("theta_aug", format="matrix"),
          phi = phi,

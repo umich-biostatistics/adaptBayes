@@ -21,9 +21,10 @@ glm_sab2(
   local_dof = 1,
   global_dof = 1,
   slab_precision = (1/15)^2,
+  mu_sd = 5,
   only_prior = F,
-  mc_warmup = 50,
-  mc_iter_after_warmup = 50,
+  mc_warmup = 1000,
+  mc_iter_after_warmup = 1000,
   mc_chains = 1,
   mc_thin = 1,
   mc_stepsize = 0.1,
@@ -122,6 +123,9 @@ value to tell the function that there is no global hyperparameter.}
 \item{slab_precision}{(pos. real) the slab-part of the regularized horseshoe,
 this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro}
 
+\item{mu_sd}{(pos. real) the prior standard deviation for the intercept
+parameter mu}
+
 \item{only_prior}{(logical) should all data be ignored, sampling only from
 the prior?}
 
@@ -199,6 +203,7 @@ foo = glm_sab2(y = current$y_curr,
               local_dof = 1,
               global_dof = 1,
               slab_precision = 0.00444,
+              mu_sd = 5,
               only_prior = 0,
               mc_warmup = 1000,
               mc_iter_after_warmup = 1000,

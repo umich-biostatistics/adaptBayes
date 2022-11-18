@@ -17,24 +17,17 @@ data {
   real<lower = 0> beta_aug_scale_stan; // c, Section 2
   real<lower = 0> beta_aug_scale_tilde_stan; // tilde~c = 0.05, Section 4.1
   real<lower = 0> slab_precision_stan; // 1/d^2, Section 2
-  vector<lower = 0>[p_stan] scale_to_variance225; //Equation (S5); equal to diag(S_alpha) / 225;
-  int<lower = 0, upper = 1> phi_prior_type; //if 1, phi is apriori truncated normal; if 0, phi is apriori beta
-  real<lower = 0, upper = 1> phi_mean_stan; //
-  real<lower = 0> phi_sd_stan; //
-  real<lower = 0> eta_param_stan; //
+  vector<lower = 0>[p_stan] scale_to_variance225; // not used in simple version but needed for compatibility with glm_sab
+  int<lower = 0, upper = 1> phi_prior_type; // not used in simple version but needed for compatibility with glm_sab
+  real<lower = 0, upper = 1> phi_mean_stan; // not used in simple version but needed for compatibility with glm_sab
+  real<lower = 0> phi_sd_stan; // not used in simple version but needed for compatibility with glm_sab
+  real<lower = 0> eta_param_stan; // not used in simple version but needed for compatibility with glm_sab
+  real<lower = 0> mu_sd_stan; // prior standard deviation on intercept
   int<lower = 0, upper = 1> only_prior;//if 1, ignore the model and data and generate from the prior only
 }
 transformed data {
   vector[p_stan] zero_vec;
-  real phi_beta_shape1;
-  real phi_beta_shape2;
-  real phi_mean_stan_trunc;
-  real phi_sd_stan_trunc;
   zero_vec = rep_vector(0.0, p_stan);
-  phi_mean_stan_trunc = fmax(1e-6, fmin(1 - 1e-6, phi_mean_stan));
-  phi_sd_stan_trunc = fmax(1e-6, fmin(sqrt(phi_mean_stan_trunc * (1 - phi_mean_stan_trunc)) - 1e-6, phi_sd_stan));
-  phi_beta_shape1 = phi_mean_stan_trunc * (phi_mean_stan_trunc * (1 - phi_mean_stan_trunc) / phi_sd_stan_trunc^2 - 1);
-  phi_beta_shape2 = (1 - phi_mean_stan_trunc) * (phi_mean_stan_trunc * (1 - phi_mean_stan_trunc) / phi_sd_stan_trunc^2 - 1);
 }
 parameters {
   real mu;
@@ -53,8 +46,7 @@ transformed parameters {
   vector[p_stan + q_stan] beta;
   vector<lower = 0,upper = sqrt(1/slab_precision_stan)>[p_stan] theta_orig; // theta
   vector<lower = 0,upper = sqrt(1/slab_precision_stan)>[q_stan] theta_aug; // theta
-  vector<lower = 0,upper = sqrt(1/min(scale_to_variance225))>[p_stan] hist_orig_scale;//Gamma in LHS of Eqn (S5)
-  matrix[p_stan,p_stan] normalizing_cov;// S_alpha * hist_orig_scale  + Theta^o
+  matrix[p_stan,p_stan] normalizing_cov;// S_alpha  + Theta^o
   theta_orig = 1 ./ sqrt(slab_precision_stan + zero_vec);
   theta_aug = 1 ./ sqrt(slab_precision_stan + (1.0 ./ (beta_aug_scale_tilde_stan^2 * lambda_aug_tilde_sq)));
   beta_orig = theta_orig .* beta_raw_orig;
@@ -73,9 +65,9 @@ model {
   tau_glob ~ student_t(global_dof_stan, 0.0, 1.0);
   lambda_orig ~ student_t(local_dof_stan, 0.0, beta_orig_scale_stan);
   lambda_aug ~ student_t(local_dof_stan, 0.0, beta_aug_scale_stan);
-  mu ~ logistic(0.0, 5.0);
+  mu ~ logistic(0.0, mu_sd_stan);
   sigma ~ student_t(1, 0.0, 5.0);
-  // Equation (S5) The next two lines together comprise the naive adaptive prior contribution
+  // Equation (S5) This is the naive adaptive prior contribution
   normalized_beta ~ normal(0.0, sqrt_eigenval_hist_var_stan);
   // Z_NAB (Normalizing constant)
   target += -(1.0 * multi_normal_lpdf(alpha_prior_mean_stan|zero_vec, normalizing_cov));

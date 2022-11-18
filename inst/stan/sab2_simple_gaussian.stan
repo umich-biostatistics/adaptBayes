@@ -18,28 +18,18 @@ data {
   real<lower = 0> beta_orig_scale_stan; // c, Section 2
   real<lower = 0> beta_aug_scale_stan; // c, Section 2
   real<lower = 0> slab_precision_stan; // 1/d^2, Section 2
-  vector<lower = 0>[p_stan] scale_to_variance225; //Equation (S6); equal to diag(S_alpha) / 225;
-  int<lower = 0, upper = 1> phi_prior_type; // this is ignored but left for compatibility
-  real<lower = 0, upper = 1> phi_mean_stan; // this is ignored but left for compatibility
-  real<lower = 0> phi_sd_stan; // this is ignored but left for compatibility
-  real psi_mean_stan; // this is ignored but left for compatibility
-  real<lower = 0> psi_sd_stan; // this is ignored but left for compatibility
+  vector<lower = 0>[p_stan] scale_to_variance225; // not used in simple version but needed for compatibility with glm_sab2
+  int<lower = 0, upper = 1> phi_prior_type; // not used in simple version but needed for compatibility with glm_sab2
+  real<lower = 0, upper = 1> phi_mean_stan; // not used in simple version but needed for compatibility with glm_sab2
+  real<lower = 0> phi_sd_stan; // not used in simple version but needed for compatibility with glm_sab2
+  real psi_mean_stan; // not used in simple version but needed for compatibility with glm_sab2
+  real<lower = 0> psi_sd_stan; // not used in simple version but needed for compatibility with glm_sab2
+  real<lower = 0> mu_sd_stan; // prior standard deviation on intercept
   int<lower = 0, upper = 1> only_prior;//if 1, ignore the model and data and generate from the prior only
 }
 transformed data {
   vector[p_stan] zero_vec;
-  real phi_beta_shape1;
-  real phi_beta_shape2;
-  real phi_mean_stan_trunc;
-  real phi_sd_stan_trunc;
   zero_vec = rep_vector(0.0, p_stan);
-  // These next four lines will only be used if phi is beta distributed
-  // Depending on the values of phi_mean_stan or phi_sd_stan, the resulting
-  // shape parameters could give stan fits
-  phi_mean_stan_trunc = fmax(1e-6, fmin(1 - 1e-6, phi_mean_stan));
-  phi_sd_stan_trunc = fmax(1e-6, fmin(sqrt(phi_mean_stan_trunc * (1 - phi_mean_stan_trunc)) - 1e-6, phi_sd_stan));
-  phi_beta_shape1 = phi_mean_stan_trunc * (phi_mean_stan_trunc * (1 - phi_mean_stan_trunc) / phi_sd_stan_trunc^2 - 1);
-  phi_beta_shape2 = (1 - phi_mean_stan_trunc) * (phi_mean_stan_trunc * (1 - phi_mean_stan_trunc) / phi_sd_stan_trunc^2 - 1);
 }
 parameters {
   real mu;
@@ -75,7 +65,7 @@ model {
   tau_glob ~ student_t(global_dof_stan, 0.0, 1.0);
   lambda_orig ~ student_t(local_dof_stan, 0.0, beta_orig_scale_stan);
   lambda_aug ~ student_t(local_dof_stan, 0.0, beta_aug_scale_stan);
-  mu ~ logistic(0.0, 5.0);
+  mu ~ logistic(0.0, mu_sd_stan);
   sigma ~ student_t(1, 0.0, 5.0);
   // Equation (S6) The next two lines together comprise the sensible adaptive prior contribution
   normalized_beta ~ normal(0.0, sqrt_eigenval_hist_var_stan);

@@ -23,3 +23,6 @@ Imports:
 SystemRequirements: GNU make, CmdStan (https://mc-stan.org/users/interfaces/cmdstan)
 RoxygenNote: 7.2.0
 Roxygen: list(markdown = TRUE)
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3

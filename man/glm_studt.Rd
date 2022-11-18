@@ -11,9 +11,10 @@ glm_studt(
   beta_scale,
   dof = 1,
   slab_precision = (1/15)^2,
+  mu_sd = 5,
   only_prior = F,
-  mc_warmup = 50,
-  mc_iter_after_warmup = 50,
+  mc_warmup = 1000,
+  mc_iter_after_warmup = 1000,
   mc_chains = 1,
   mc_thin = 1,
   mc_stepsize = 0.1,
@@ -24,30 +25,35 @@ glm_studt(
 )
 }
 \arguments{
-\item{y}{(vector) outcomes corresponding to the type of glm desired. This should
-match whatever datatype is expected by the stan program.}
+\item{y}{(vector) outcomes corresponding to the type of glm desired. This
+should match whatever datatype is expected by the stan program.}
 
-\item{x_standardized}{(matrix) matrix of numeric values with number of rows equal
-to the length of y and number of columns equal to p+q. It is assumed without
-verification that each column is standardized to whatever scale the prior
-expects - in Boonstra and Barbaro, all predictors are marginally generated to have
-mean zero and unit variance, so no standardization is conducted. In practice,
-all data should be standardized to have a common scale before model fitting.
-If regression coefficients on the natural scale are desired, they be easily obtained
-through unstandardizing.}
+\item{x_standardized}{(matrix) matrix of numeric values with number of rows
+equal to the length of y and number of columns equal to p+q. It is assumed
+without verification that each column is standardized to whatever scale the
+prior expects - in Boonstra and Barbaro, all predictors are marginally
+generated to have mean zero and unit variance, so no standardization is
+conducted. In practice, all data should be standardized to have a common
+scale before model fitting. If regression coefficients on the natural scale
+are desired, they be easily obtained through unstandardizing.}
 
-\item{family}{(character) Similar to argument in \code{glm} with the same name, but
-here this must be a character, and currently only 'binomial' (if y is binary) or
-'gaussian' (if y is continuous) are valid choices.}
+\item{family}{(character) Similar to argument in \code{glm} with the same name,
+but here this must be a character, and currently only 'binomial' (if y is
+binary) or 'gaussian' (if y is continuous) are valid choices.}
 
-\item{beta_scale}{(pos. real) constants indicating the prior scale of the student-t prior.}
+\item{beta_scale}{(pos. real) constants indicating the prior scale of the
+student-t prior.}
 
 \item{dof}{(pos. integer) degrees of freedom for the student-t prior}
 
 \item{slab_precision}{(pos. real) the slab-part of the regularized horseshoe,
 this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro}
 
-\item{only_prior}{(logical) should all data be ignored, sampling only from the prior?}
+\item{mu_sd}{(pos. real) the prior standard deviation for the intercept
+parameter mu}
+
+\item{only_prior}{(logical) should all data be ignored, sampling only from
+the prior?}
 
 \item{mc_warmup}{number of MCMC warm-up iterations}
 
@@ -72,11 +78,12 @@ object asis or should a summary of stanfit be returned as a regular list}
 \code{list} object containing the draws and other information.
 }
 \description{
-Program for fitting a GLM equipped with a regularized student-t prior on the regression
-coefficients, parametrized using the normal-inverse-gamma distribution. The 'regularization'
-refers to the fact that the inverse-gamma scale is has a finite upper bound that
-it smoothly approaches. This method was not used in the simulation study but was
-used in the data analysis. Specifically, it corresponds to 'PedRESC2'.
+Program for fitting a GLM equipped with a regularized student-t prior on the
+regression coefficients, parametrized using the normal-inverse-gamma
+distribution. The 'regularization' refers to the fact that the inverse-gamma
+scale is has a finite upper bound that it smoothly approaches. This method
+was not used in the simulation study but was used in the data analysis.
+Specifically, it corresponds to 'PedRESC2'.
 }
 \examples{
 
@@ -89,6 +96,7 @@ used in the data analysis. Specifically, it corresponds to 'PedRESC2'.
                     beta_scale = 0.0231,
                     dof = 1,
                     slab_precision = 0.00444,
+                    mu_sd = 5,
                     only_prior = 0,
                     mc_warmup = 1000,
                     mc_iter_after_warmup = 1000,
@@ -106,6 +114,7 @@ used in the data analysis. Specifically, it corresponds to 'PedRESC2'.
                     beta_scale = 0.0231,
                     dof = 1,
                     slab_precision = 0.00444,
+                    mu_sd = 5,
                     only_prior = 0,
                     mc_warmup = 1000,
                     mc_iter_after_warmup = 1000,
