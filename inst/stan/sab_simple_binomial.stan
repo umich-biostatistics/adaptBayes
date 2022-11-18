@@ -76,7 +76,7 @@ model {
   // of the scale parameter
   lambda_orig ~ student_t(local_dof_stan, 0.0, 2.0 * beta_orig_scale_stan);
   lambda_aug ~ student_t(local_dof_stan, 0.0, 2.0 * beta_aug_scale_stan);
-  mu ~ logistic(0.0, 5.0);
+  mu ~ logistic(0.0, 50);
   // Equation (S6) The next two lines together comprise the sensible adaptive prior contribution
   normalized_beta ~ normal(0.0, sqrt_eigenval_hist_var_stan);
   // Z_SAB (Normalizing constant)
