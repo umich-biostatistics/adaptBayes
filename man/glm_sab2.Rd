@@ -94,7 +94,7 @@ that is likely to result in a "challenging" prior.}
 \item{psi_sd}{(real) prior mean and standard deviation for psi, which is
 apriori distributed as a log-normal random variable. The log-normal is
 parametrized such that these are the mean and normal of the log of the
-random variable, not the random variable itsef. If the link function is the
+random variable, not the random variable itself. If the link function is the
 identity function, i.e. \code{family = "gaussian"}, then the theory suggests
 that this should be equal to 1 and so you should choose psi_mean and psi_sd
 close to zero. For non-linear link functions,i.e. \code{family = "binomial"},
@@ -205,8 +205,8 @@ foo = glm_sab2(y = current$y_curr,
               slab_precision = 0.00444,
               mu_sd = 5,
               only_prior = 0,
-              mc_warmup = 1000,
-              mc_iter_after_warmup = 1000,
+              mc_warmup = 200,
+              mc_iter_after_warmup = 200,
               mc_chains = 2,
               mc_thin = 1,
               mc_stepsize = 0.1,
