@@ -15,7 +15,9 @@ data {
   real<lower = 0> global_dof_stan; // dof of pi(tau), = 1
   real<lower = 0> beta_orig_scale_stan; // c, Section 2
   real<lower = 0> beta_aug_scale_stan; // c, Section 2
-  real<lower = 0> slab_precision_stan; // 1/d^2, Section 2
+  // d in Section 2 is InvGamma(slab_dof_stan/2,slab_scale_stan^2*slab_dof_stan/2)
+  real<lower = 0> slab_dof_stan; //
+  real<lower = 0> slab_scale_stan;
   vector<lower = 0>[p_stan] scale_to_variance225; //Equation (S6); equal to diag(S_alpha) / 225;
   int<lower = 0, upper = 1> phi_prior_type; //if 1, phi is apriori truncated normal; if 0, phi is apriori beta
   real<lower = 0, upper = 1> phi_mean_stan; //
@@ -23,7 +25,7 @@ data {
   real psi_mean_stan; //
   real<lower = 0> psi_sd_stan; //
   real<lower = 0> mu_sd_stan; // prior standard deviation on intercept
- int<lower = 0, upper = 1> only_prior;//if 1, ignore the model and data and generate from the prior only
+  int<lower = 0, upper = 1> only_prior;//if 1, ignore the model and data and generate from the prior only
 }
 transformed data {
   vector[p_stan] zero_vec;
@@ -31,6 +33,8 @@ transformed data {
   real phi_beta_shape2;
   real phi_mean_stan_trunc;
   real phi_sd_stan_trunc;
+  real<lower = 0> slab_ig_shape;
+  real<lower = 0> slab_ig_scale;
   zero_vec = rep_vector(0.0, p_stan);
   // These next four lines will only be used if phi is beta distributed
   // Depending on the values of phi_mean_stan or phi_sd_stan, the resulting
@@ -39,6 +43,15 @@ transformed data {
   phi_sd_stan_trunc = fmax(1e-6, fmin(sqrt(phi_mean_stan_trunc * (1 - phi_mean_stan_trunc)) - 1e-6, phi_sd_stan));
   phi_beta_shape1 = phi_mean_stan_trunc * (phi_mean_stan_trunc * (1 - phi_mean_stan_trunc) / phi_sd_stan_trunc^2 - 1);
   phi_beta_shape2 = (1 - phi_mean_stan_trunc) * (phi_mean_stan_trunc * (1 - phi_mean_stan_trunc) / phi_sd_stan_trunc^2 - 1);
+  if(!is_inf(slab_dof_stan)) {
+    slab_ig_shape = slab_dof_stan / 2.0;
+    slab_ig_scale = slab_scale_stan^2 * slab_dof_stan / 2.0;
+  } else {
+    // slab is not used in the model here but we use a proper prior to avoid
+    // numerical issues
+    slab_ig_shape = 2.5;
+    slab_ig_scale = 2.5;
+  }
 }
 parameters {
   real mu;
@@ -48,6 +61,7 @@ parameters {
   real<lower = 0> tau_glob; // tau
   vector<lower = 0>[p_stan] lambda_orig;// lambda^o
   vector<lower = 0>[q_stan] lambda_aug; // lambda^a
+  real<lower = 0> slab; // d^2, Section 2
   real<lower = 0, upper = 1> phi;// phi
 }
 transformed parameters {
@@ -55,12 +69,13 @@ transformed parameters {
   vector[p_stan] beta_orig; // scaled
   vector[q_stan] beta_aug; // scaled
   vector[p_stan + q_stan] beta;
-  vector<lower = 0,upper = sqrt(1/slab_precision_stan)>[p_stan] theta_orig;// theta
-  vector<lower = 0,upper = sqrt(1/slab_precision_stan)>[q_stan] theta_aug;// theta
+  vector<lower = 0>[p_stan] theta_orig;// theta
+  vector<lower = 0>[q_stan] theta_aug;// theta
   vector<lower = 0>[p_stan] hist_orig_scale;//Diagonal of Gamma^{-1} in LHS of Eqn (S6)
   matrix[p_stan,p_stan] normalizing_cov;// S_alpha * hist_orig_scale  + Theta^o
   real<lower = 0, upper = 1> phi_copy;// to gracefully allow for zero-valued prior standard deviation
   real<lower = 0> psi_copy;// to gracefully allow for zero-valued prior standard deviation
+  real<lower = 0> slab_copy;// to gracefully allow for infinite slab_dof_stan
   if(phi_sd_stan > 0) {
     phi_copy = phi;
   } else {
@@ -71,8 +86,13 @@ transformed parameters {
   } else {
     psi_copy = exp(psi_mean_stan);
   }
-  theta_orig = 1 ./ sqrt(slab_precision_stan + ((1 - phi_copy) ./ (tau_glob^2 * square(lambda_orig))));
-  theta_aug = 1 ./ sqrt(slab_precision_stan + (1 ./ (tau_glob^2 * square(lambda_aug))));
+  if(!is_inf(slab_dof_stan)) {
+    slab_copy = slab;
+  } else {
+    slab_copy = slab_scale_stan^2;
+  }
+  theta_orig = 1 ./ sqrt(1 / slab_copy + ((1 - phi_copy) ./ (tau_glob^2 * square(lambda_orig))));
+  theta_aug = 1 ./ sqrt(1 / slab_copy + (1 ./ (tau_glob^2 * square(lambda_aug))));
   beta_orig = theta_orig .* beta_raw_orig;
   beta_aug = theta_aug .* beta_raw_aug;
   beta = append_row(beta_orig, beta_aug);
@@ -94,6 +114,7 @@ model {
   // of the scale parameter
   lambda_orig ~ student_t(local_dof_stan, 0.0, 2.0 * beta_orig_scale_stan);
   lambda_aug ~ student_t(local_dof_stan, 0.0, 2.0 * beta_aug_scale_stan);
+  slab ~ inv_gamma(slab_ig_shape, slab_ig_scale);
   mu ~ logistic(0.0, mu_sd_stan);
   if(phi_sd_stan > 0 && phi_prior_type == 1) {
     phi ~ normal(phi_mean_stan, phi_sd_stan);

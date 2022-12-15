@@ -14,7 +14,8 @@ glm_standard(
   beta_aug_scale,
   local_dof = 1,
   global_dof = 1,
-  slab_precision = (1/15)^2,
+  slab_dof = Inf,
+  slab_scale = 15,
   mu_sd = 5,
   intercept_offset = NULL,
   only_prior = F,
@@ -26,7 +27,8 @@ glm_standard(
   mc_adapt_delta = 0.9,
   mc_max_treedepth = 15,
   return_as_stanfit = FALSE,
-  seed = sample.int(.Machine$integer.max, 1)
+  seed = sample.int(.Machine$integer.max, 1),
+  slab_precision = NULL
 )
 }
 \arguments{
@@ -74,8 +76,13 @@ value to tell the function that there are no local hyperparameters.}
 tau. Boonstra and Barbaro always used global_dof = 1. Choose a negative
 value to tell the function that there is no global hyperparameter.}
 
-\item{slab_precision}{(pos. real) the slab-part of the regularized horseshoe,
-this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro}
+\item{slab_dof}{see \code{slab_scale}}
+
+\item{slab_scale}{(pos. real) these control the slab-part of the regularized
+horseshoe. Specifically, in the notation of Boonstra and Barbaro,
+d^2~InverseGamma(\code{slab_dof}/2, \code{slab_scale}^2*\code{slab_dof}/2). In Boonstra and
+Barbaro, d was fixed at 15, and you can achieve this by leaving these at
+their default values of \code{slab_dof} = Inf and \code{slab_scale} = 15.}
 
 \item{mu_sd}{(pos. real) the prior standard deviation for the intercept
 parameter mu}
@@ -111,6 +118,14 @@ the prior?}
 object asis or should a summary of stanfit be returned as a regular list}
 
 \item{seed}{seed for the underlying STAN model to allow for reproducibility}
+
+\item{slab_precision}{(pos. real) the slab-part of the regularized horseshoe,
+this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro. If
+specified, it is assumed that you want a fixed slab component and will
+take precedence over any provided values of \code{slab_dof} and \code{slab_scale};
+however, \code{slab_precision} will be going away in a future release, and
+the proper way to specify a fixed slab component with with precision
+1/d^2 for some number d is through \code{slab_dof = Inf} and \code{slab_scale = d}.}
 }
 \value{
 \code{list} object containing the draws and other information.
@@ -131,8 +146,7 @@ foo = glm_standard(y = historical$y_hist,
                    beta_orig_scale = 0.0231,
                    beta_aug_scale = 0.0231,
                    local_dof = 1,
-                   global_dof = 1,
-                   slab_precision = 0.00444,
+                   global_dof = 1,,
                    mu_sd = 5,
                    intercept_offset = NULL,
                    only_prior = 0,
@@ -155,7 +169,6 @@ foo = glm_standard(y = historical$y_hist,
                     beta_aug_scale = 0.0223,
                     local_dof = 1,
                     global_dof = 1,
-                    slab_precision = 0.00444,
                     mu_sd = 5,
                     intercept_offset = NULL,
                     only_prior = 0,

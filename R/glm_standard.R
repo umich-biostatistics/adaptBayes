@@ -38,8 +38,12 @@
 #' @param global_dof (pos. integer) number indicating the degrees of freedom for
 #'   tau. Boonstra and Barbaro always used global_dof = 1. Choose a negative
 #'   value to tell the function that there is no global hyperparameter.
-#' @param slab_precision (pos. real) the slab-part of the regularized horseshoe,
-#'   this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro
+#' @param slab_dof see `slab_scale`
+#' @param slab_scale (pos. real) these control the slab-part of the regularized
+#'   horseshoe. Specifically, in the notation of Boonstra and Barbaro,
+#'   d^2~InverseGamma(`slab_dof`/2, `slab_scale`^2*`slab_dof`/2). In Boonstra and
+#'   Barbaro, d was fixed at 15, and you can achieve this by leaving these at
+#'   their default values of `slab_dof` = Inf and `slab_scale` = 15.
 #' @param mu_sd (pos. real) the prior standard deviation for the intercept
 #'   parameter mu
 #' @param intercept_offset (vector) vector of 0's and 1's equal having the same
@@ -63,6 +67,14 @@
 #' @param return_as_stanfit (logical) should the function return the stanfit
 #'   object asis or should a summary of stanfit be returned as a regular list
 #' @param seed seed for the underlying STAN model to allow for reproducibility
+#' @param slab_precision (pos. real) the slab-part of the regularized horseshoe,
+#'   this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro. If
+#'   specified, it is assumed that you want a fixed slab component and will
+#'   take precedence over any provided values of `slab_dof` and `slab_scale`;
+#'   however, `slab_precision` will be going away in a future release, and
+#'   the proper way to specify a fixed slab component with with precision
+#'   1/d^2 for some number d is through `slab_dof = Inf` and `slab_scale = d`.
+#'
 #'
 #' @import cmdstanr dplyr
 #'
@@ -81,7 +93,6 @@
 #'                    beta_aug_scale = 0.0231,
 #'                    local_dof = 1,
 #'                    global_dof = 1,
-#'                    slab_precision = 0.00444,
 #'                    mu_sd = 5,
 #'                    intercept_offset = NULL,
 #'                    only_prior = 0,
@@ -104,7 +115,6 @@
 #'                     beta_aug_scale = 0.0223,
 #'                     local_dof = 1,
 #'                     global_dof = 1,
-#'                     slab_precision = 0.00444,
 #'                     mu_sd = 5,
 #'                     intercept_offset = NULL,
 #'                     only_prior = 0,
@@ -127,7 +137,8 @@ glm_standard = function(y,
                         beta_aug_scale,
                         local_dof = 1,
                         global_dof = 1,
-                        slab_precision = (1/15)^2,
+                        slab_dof = Inf,
+                        slab_scale = 15,
                         mu_sd = 5.0,
                         intercept_offset = NULL,
                         only_prior = F,
@@ -139,7 +150,9 @@ glm_standard = function(y,
                         mc_adapt_delta = 0.9,
                         mc_max_treedepth = 15,
                         return_as_stanfit = FALSE,
-                        seed = sample.int(.Machine$integer.max, 1)) {
+                        seed = sample.int(.Machine$integer.max, 1),
+                        slab_precision = NULL
+) {
 
   if(family != "gaussian" && family != "binomial") {
     stop("'family' must equal 'gaussian' or 'binomial'")
@@ -148,7 +161,11 @@ glm_standard = function(y,
   stopifnot(ncol(x_standardized) == (p+q));
   if(is.null(intercept_offset)) {intercept_offset = numeric(length(y));}
 
-
+  if(!is.null(slab_precision)) {
+    slab_dof = Inf;
+    slab_scale = 1 / sqrt(slab_precision);
+    message(paste0("'slab_precision' will be going away in a future release; use 'slab_dof = Inf' and 'slab_scale = 1/sqrt(",slab_precision,")'"))
+  }
 
   # Now we do the sampling in Stan
   model_file <-
@@ -170,7 +187,8 @@ glm_standard = function(y,
                     global_dof_stan = global_dof,
                     beta_orig_scale_stan = beta_orig_scale,
                     beta_aug_scale_stan = beta_aug_scale,
-                    slab_precision_stan = slab_precision,
+                    slab_dof_stan = slab_dof,
+                    slab_scale_stan = slab_scale,
                     mu_sd_stan = mu_sd,
                     intercept_offset_stan = intercept_offset,
                     only_prior = as.integer(only_prior)),
@@ -205,7 +223,8 @@ glm_standard = function(y,
              curr_fit$value$draws("mu_offset", format="matrix")[, 1, drop = T],
            beta = curr_fit$value$draws("beta", format="matrix"),
            theta_orig =  curr_fit$value$draws("theta_orig", format="matrix"),
-           theta_aug = curr_fit$value$draws("theta_aug", format="matrix"));
+           theta_aug = curr_fit$value$draws("theta_aug", format="matrix"),
+           slab = curr_fit$value$draws("slab_copy", format="matrix"));
     } else {
       list(num_divergences = sum(model_diagnostics[,,"divergent__"]),
            max_rhat = max(model_summary$rhat, na.rm=T),
@@ -213,7 +232,8 @@ glm_standard = function(y,
            mu = curr_fit$value$draws("mu", format="matrix")[, 1, drop = T] +
              curr_fit$value$draws("mu_offset", format="matrix")[, 1, drop = T],
            beta = curr_fit$value$draws("beta", format="matrix"),
-           theta_orig =  curr_fit$value$draws("theta_orig", format="matrix"));
+           theta_orig =  curr_fit$value$draws("theta_orig", format="matrix"),
+           slab = curr_fit$value$draws("slab_copy", format="matrix"));
     }
   }
 }

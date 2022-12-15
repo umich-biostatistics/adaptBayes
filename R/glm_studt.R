@@ -23,8 +23,12 @@
 #' @param beta_scale (pos. real) constants indicating the prior scale of the
 #'   student-t prior.
 #' @param dof (pos. integer) degrees of freedom for the student-t prior
-#' @param slab_precision (pos. real) the slab-part of the regularized horseshoe,
-#'   this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro
+#' @param slab_dof see `slab_scale`
+#' @param slab_scale (pos. real) these control the slab-part of the regularized
+#'   horseshoe. Specifically, in the notation of Boonstra and Barbaro,
+#'   d^2~InverseGamma(`slab_dof`/2, `slab_scale`^2*`slab_dof`/2). In Boonstra and
+#'   Barbaro, d was fixed at 15, and you can achieve this by leaving these at
+#'   their default values of `slab_dof` = Inf and `slab_scale` = 15.
 #' @param mu_sd (pos. real) the prior standard deviation for the intercept
 #'   parameter mu
 #' @param only_prior (logical) should all data be ignored, sampling only from
@@ -39,6 +43,14 @@
 #' @param return_as_stanfit (logical) should the function return the stanfit
 #'   object asis or should a summary of stanfit be returned as a regular list
 #' @param seed seed for the underlying STAN model to allow for reproducibility
+#' @param slab_precision (pos. real) the slab-part of the regularized horseshoe,
+#'   this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro. If
+#'   specified, it is assumed that you want a fixed slab component and will take
+#'   precedence over any provided values of `slab_dof` and `slab_scale`;
+#'   `slab_precision` is provided for backwards compatibility but will be going
+#'   away in a future release, and the proper way to specify a fixed slab
+#'   component with with precision 1/d^2 for some number d is through `slab_dof
+#'   = Inf` and `slab_scale = d`.
 #'
 #' @return `list` object containing the draws and other information.
 #'
@@ -52,7 +64,6 @@
 #'                     family = "binomial",
 #'                     beta_scale = 0.0231,
 #'                     dof = 1,
-#'                     slab_precision = 0.00444,
 #'                     mu_sd = 5,
 #'                     only_prior = 0,
 #'                     mc_warmup = 200,
@@ -70,7 +81,6 @@
 #'                     family = "binomial",
 #'                     beta_scale = 0.0231,
 #'                     dof = 1,
-#'                     slab_precision = 0.00444,
 #'                     mu_sd = 5,
 #'                     only_prior = 0,
 #'                     mc_warmup = 200,
@@ -90,7 +100,8 @@ glm_studt = function(y,
                      family = "binomial",
                      beta_scale,
                      dof = 1,
-                     slab_precision = (1/15)^2,
+                     slab_dof = Inf,
+                     slab_scale = 15,
                      mu_sd = 5,
                      only_prior = F,
                      mc_warmup = 1e3,
@@ -101,11 +112,19 @@ glm_studt = function(y,
                      mc_adapt_delta = 0.9,
                      mc_max_treedepth = 15,
                      return_as_stanfit = FALSE,
-                     seed = sample.int(.Machine$integer.max, 1)) {
+                     seed = sample.int(.Machine$integer.max, 1),
+                     slab_precision = NULL
+) {
 
 
   if(family != "gaussian" && family != "binomial") {
     stop("'family' must equal 'gaussian' or 'binomial'")
+  }
+
+  if(!is.null(slab_precision)) {
+    slab_dof = Inf;
+    slab_scale = 1 / sqrt(slab_precision);
+    message(paste0("'slab_precision' will be going away in a future release; use 'slab_dof = Inf' and 'slab_scale = 1/sqrt(",slab_precision,")'"))
   }
 
   # Now we do the sampling in Stan
@@ -125,7 +144,8 @@ glm_studt = function(y,
                     x_standardized_stan = x_standardized,
                     dof_stan = dof,
                     beta_scale_stan = beta_scale,
-                    slab_precision_stan = slab_precision,
+                    slab_dof_stan = slab_dof,
+                    slab_scale_stan = slab_scale,
                     mu_sd_stan = mu_sd,
                     only_prior = as.integer(only_prior)),
         iter_warmup = mc_warmup,
@@ -156,7 +176,8 @@ glm_studt = function(y,
          max_rhat = max(model_summary$rhat, na.rm=T),
          mu = curr_fit$value$draws("mu", format="matrix")[, 1, drop = T],
          beta = curr_fit$value$draws("beta", format="matrix"),
-         theta = curr_fit$value$draws("theta", format="matrix"));
+         theta = curr_fit$value$draws("theta", format="matrix"),
+         slab = curr_fit$value$draws("slab_copy", format="matrix"));
   }
 }
 

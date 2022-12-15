@@ -54,8 +54,8 @@
 #' @param psi_sd (real) prior mean and standard deviation for psi, which is
 #'   apriori distributed as a log-normal random variable. The log-normal is
 #'   parametrized such that these are the mean and normal of the log of the
-#'   random variable, not the random variable itself. If the link function is the
-#'   identity function, i.e. `family = "gaussian"`, then the theory suggests
+#'   random variable, not the random variable itself. If the link function is
+#'   the identity function, i.e. `family = "gaussian"`, then the theory suggests
 #'   that this should be equal to 1 and so you should choose psi_mean and psi_sd
 #'   close to zero. For non-linear link functions,i.e. `family = "binomial"`,
 #'   you should choose positive (but probably not too large) values for psi_sd.
@@ -75,8 +75,12 @@
 #' @param global_dof (pos. integer) number indicating the degrees of freedom for
 #'   tau. Boonstra and Barbaro always used global_dof = 1. Choose a negative
 #'   value to tell the function that there is no global hyperparameter.
-#' @param slab_precision (pos. real) the slab-part of the regularized horseshoe,
-#'   this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro
+#' @param slab_dof see `slab_scale`
+#' @param slab_scale (pos. real) these control the slab-part of the regularized
+#'   horseshoe. Specifically, in the notation of Boonstra and Barbaro,
+#'   d^2~InverseGamma(`slab_dof`/2, `slab_scale`^2*`slab_dof`/2). In Boonstra and
+#'   Barbaro, d was fixed at 15, and you can achieve this by leaving these at
+#'   their default values of `slab_dof` = Inf and `slab_scale` = 15.
 #' @param mu_sd (pos. real) the prior standard deviation for the intercept
 #'   parameter mu
 #' @param only_prior (logical) should all data be ignored, sampling only from
@@ -99,6 +103,14 @@
 #'   elements each equal to 225. This is explicitly calculated if it is not
 #'   provided
 #' @param seed seed for the underlying STAN model to allow for reproducibility
+#' @param slab_precision (pos. real) the slab-part of the regularized horseshoe,
+#'   this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro. If
+#'   specified, it is assumed that you want a fixed slab component and will take
+#'   precedence over any provided values of `slab_dof` and `slab_scale`;
+#'   `slab_precision` is provided for backwards compatibility but will be going
+#'   away in a future release, and the proper way to specify a fixed slab
+#'   component with with precision 1/d^2 for some number d is through `slab_dof
+#'   = Inf` and `slab_scale = d`.
 #'
 #' @return `list` object containing the draws and other information.
 #'
@@ -135,7 +147,6 @@
 #'               beta_aug_scale = 0.0223,
 #'               local_dof = 1,
 #'               global_dof = 1,
-#'               slab_precision = 0.00444,
 #'               mu_sd = 5,
 #'               only_prior = 0,
 #'               mc_warmup = 200,
@@ -166,7 +177,8 @@ glm_sab2 = function(y,
                     beta_aug_scale,
                     local_dof = 1,
                     global_dof = 1,
-                    slab_precision = (1/15)^2,
+                    slab_dof = Inf,
+                    slab_scale = 15,
                     mu_sd = 5,
                     only_prior = F,
                     mc_warmup = 1e3,
@@ -179,7 +191,8 @@ glm_sab2 = function(y,
                     return_as_stanfit = FALSE,
                     eigendecomp_hist_var = NULL,
                     scale_to_variance225 = NULL,
-                    seed = sample.int(.Machine$integer.max, 1)
+                    seed = sample.int(.Machine$integer.max, 1),
+                    slab_precision = NULL
 ) {
 
   if(family != "gaussian" && family != "binomial") {
@@ -208,6 +221,12 @@ glm_sab2 = function(y,
   if(phi_sd < 0) {stop("'phi_sd' must be non-negative")}
   if(psi_sd < 0) {stop("'psi_sd' must be non-negative")}
   if(mu_sd < 0) {stop("'mu_sd' must be non-negative")}
+
+  if(!is.null(slab_precision)) {
+    slab_dof = Inf;
+    slab_scale = 1 / sqrt(slab_precision);
+    message(paste0("'slab_precision' will be going away in a future release; use 'slab_dof = Inf' and 'slab_scale = 1/sqrt(",slab_precision,")'"))
+  }
 
   if(phi_dist == "beta") {
 
@@ -258,7 +277,8 @@ glm_sab2 = function(y,
                     global_dof_stan = global_dof,
                     beta_orig_scale_stan = beta_orig_scale,
                     beta_aug_scale_stan = beta_aug_scale,
-                    slab_precision_stan = slab_precision,
+                    slab_dof_stan = slab_dof,
+                    slab_scale_stan = slab_scale,
                     scale_to_variance225 = scale_to_variance225,
                     phi_prior_type = ifelse(phi_dist == "trunc_norm", 1L, 0L),
                     phi_mean_stan = phi_mean,
@@ -304,6 +324,7 @@ glm_sab2 = function(y,
          beta = curr_fit$value$draws("beta", format="matrix"),
          theta_orig =  curr_fit$value$draws("theta_orig", format="matrix"),
          theta_aug = curr_fit$value$draws("theta_aug", format="matrix"),
+         slab = curr_fit$value$draws("slab_copy", format="matrix"),
          phi = phi,
          psi = psi);
   }
