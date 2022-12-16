@@ -43,6 +43,6 @@ model {
   normalized_beta ~ normal(0.0, sqrt_eigenval_hist_var_stan);
   // Z_SAB (Normalizing constant)
   if(only_prior == 0) {
-    y_stan ~ bernoulli_logit(mu + x_standardized_stan * beta);
+    y_stan ~ bernoulli_logit_glm(x_standardized_stan, mu, beta);
   }
 }

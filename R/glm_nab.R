@@ -299,8 +299,8 @@ glm_nab = function(y,
     model_summary <- curr_fit$value$summary()
 
     if(phi_mean == 1 && phi_sd == 0 && is.infinite(eta_param)) {
-      phi = rep(1, mc_iter_after_warmup);
-      eta = rep(1, mc_iter_after_warmup);
+      phi = rep(1, mc_iter_after_warmup * mc_chains);
+      eta = rep(1, mc_iter_after_warmup * mc_chains);
     } else {
       phi = curr_fit$value$draws("phi_copy", format="matrix")[, 1, drop = T];
       eta = curr_fit$value$draws("eta_copy", format="matrix")[, 1, drop = T];

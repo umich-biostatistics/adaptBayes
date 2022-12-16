@@ -311,8 +311,8 @@ glm_sab2 = function(y,
     model_summary <- curr_fit$value$summary()
 
     if(phi_mean == 1 && phi_sd == 0 && psi_sd == 0) {
-      phi = rep(1, mc_iter_after_warmup);
-      psi = rep(1, mc_iter_after_warmup);
+      phi = rep(1, mc_iter_after_warmup * mc_chains);
+      psi = rep(1, mc_iter_after_warmup * mc_chains);
     } else {
       phi = curr_fit$value$draws("phi_copy", format="matrix")[, 1, drop = T];
       psi = curr_fit$value$draws("psi_copy", format="matrix")[, 1, drop = T];

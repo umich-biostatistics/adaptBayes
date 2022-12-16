@@ -80,6 +80,6 @@ model {
   // Scaling normalized_beta to be independent ends up dropping a necessary determinant calculation: we add that back in here:
   target += -(1.0 * sum(log(hist_orig_scale)));
   if(only_prior == 0) {
-    y_stan ~ bernoulli_logit(mu + x_standardized_stan * beta);
+    y_stan ~ bernoulli_logit_glm(x_standardized_stan, mu, beta);
   }
 }

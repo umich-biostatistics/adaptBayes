@@ -129,6 +129,7 @@ model {
   target += -(1.0 * sum(log(hist_orig_scale)));
   // Z_NAB (Normalizing constant)
   target += -(1.0 * multi_normal_lpdf(alpha_prior_mean_stan|zero_vec, normalizing_cov));
-  if(only_prior == 0)
-  y_stan ~ bernoulli_logit(mu + x_standardized_stan * beta);
+  if(only_prior == 0) {
+    y_stan ~ bernoulli_logit_glm(x_standardized_stan, mu, beta);
+  }
 }

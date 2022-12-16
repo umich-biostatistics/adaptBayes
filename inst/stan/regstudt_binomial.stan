@@ -53,6 +53,7 @@ model {
   lambda_scale_sq ~ inv_gamma(dof_stan/2.0, dof_stan);
   slab ~ inv_gamma(slab_ig_shape, slab_ig_scale);
   mu ~ logistic(0.0, mu_sd_stan);
-  if(only_prior == 0)
-  y_stan ~ bernoulli_logit(mu + x_standardized_stan * beta);
+  if(only_prior == 0) {
+    y_stan ~ bernoulli_logit_glm(x_standardized_stan, mu, beta);
+  }
 }

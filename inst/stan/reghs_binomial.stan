@@ -19,6 +19,7 @@ data {
 transformed data {
   real<lower = 0> slab_ig_shape;
   real<lower = 0> slab_ig_scale;
+  int<lower = 0, upper = 1> include_offset;
   if(!is_inf(slab_dof_stan)) {
     slab_ig_shape = slab_dof_stan / 2.0;
     slab_ig_scale = slab_scale_stan^2 * slab_dof_stan / 2.0;
@@ -27,6 +28,11 @@ transformed data {
     // numerical issues
     slab_ig_shape = 2.5;
     slab_ig_scale = 2.5;
+  }
+  if(max(intercept_offset_stan) == 0 || min(intercept_offset_stan) == 1) {
+    include_offset = 0;
+  } else {
+    include_offset = 1;
   }
 }
 parameters {
@@ -52,6 +58,7 @@ transformed parameters {
   theta_aug = 1 ./ sqrt(1 / slab_copy + (1 ./ (tau_glob^2 * square(lambda_aug))));
   beta = append_row(theta_orig, theta_aug) .* beta_raw;
 }
+
 model {
   beta_raw ~ normal(0.0, 1.0);
   tau_glob ~ student_t(global_dof_stan, 0.0, 1.0);
@@ -64,7 +71,10 @@ model {
   slab ~ inv_gamma(slab_ig_shape, slab_ig_scale);
   mu ~ logistic(0.0, mu_sd_stan);
   mu_offset ~ logistic(0.0, mu_sd_stan / 2);
-  if(only_prior == 0) {
+  if(only_prior == 0 && include_offset == 1) {
     y_stan ~ bernoulli_logit(mu + intercept_offset_stan * mu_offset + x_standardized_stan * beta);
+  } else if(only_prior == 0 && include_offset == 0) {
+    y_stan ~ bernoulli_logit_glm(x_standardized_stan, mu, beta);
   }
 }
+
