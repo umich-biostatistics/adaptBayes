@@ -1,6 +1,11 @@
 # R package `adaptBayes`
 
-The adaptBayes R packages provides code to accompany the methodology developed in Boonstra and Barbaro (2020). The sensible adaptive bayesian update is implemented in `glm_sab()` and the naive adaptive bayesian update is implemented in `glm_nab()`. 
+The adaptBayes R packages provides code to accompany the methodology developed
+in Boonstra and Barbaro (2020). The sensible adaptive bayesian update is
+implemented in `glm_sab()` and the naive adaptive bayesian update is implemented
+in `glm_nab()`. A non-adaptive version of the sensible bayesian update is 
+provided in `glm_sb()`. An extended version of the sensible and sensible adaptive
+priors are provided in `glm_sb2()` and `glm_sab2()`. 
 
 ```r
 library(devtools)
