@@ -9,16 +9,19 @@ solve_for_hiershrink_scale(
   npar,
   local_dof = 1,
   global_dof = 1,
-  slab_precision = (1/15)^2,
+  slab_df = Inf,
+  slab_scale = 15,
   n,
   tol = .Machine$double.eps^0.5,
   max_iter = 100,
-  n_sim = 2e+05
+  n_sim = 2e+05,
+  slab_precision = NULL
 )
 }
 \arguments{
-\item{target_mean}{(pos. reals): the desired prior number of effective parameters
-(tilde xi_eff in Boonstra and Barbaro). An error will be thrown if target_mean > npar}
+\item{target_mean}{(pos. reals): the desired prior number of effective
+parameters (tilde xi_eff in Boonstra and Barbaro). An error will be thrown
+if target_mean > npar}
 
 \item{npar}{(pos. integers): the number of covariates.}
 
@@ -30,8 +33,11 @@ value to tell the function that there are no local hyperparameters.}
 tau. Boonstra and Barbaro always used global_dof = 1. Choose a negative
 value to tell the function that there is no global hyperparameter.}
 
-\item{slab_precision}{(pos. real) the slab-part of the regularized horseshoe,
-this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro}
+\item{slab_scale}{(pos. real) these control the slab-part of the regularized
+horseshoe. Specifically, in the notation of Boonstra and Barbaro,
+d^2~InverseGamma(\code{slab_dof}/2, \code{slab_scale}^2*\code{slab_dof}/2). In Boonstra
+and Barbaro, d was fixed at 15, and you can achieve this by leaving these
+at their default values of \code{slab_dof} = Inf and \code{slab_scale} = 15.}
 
 \item{n}{(pos. integer) sample size of the study}
 
@@ -40,27 +46,39 @@ this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro}
 \item{max_iter}{(pos. integer) maximum number of iterations to run without
 convergence before giving up}
 
-\item{n_sim}{(pos. integer) number of simulated draws from the underlying student-t
-hyperpriors to calculate the Monte Carlo-based approximation of the expectation.}
+\item{n_sim}{(pos. integer) number of simulated draws from the underlying
+student-t hyperpriors to calculate the Monte Carlo-based approximation of
+the expectation.}
+
+\item{slab_precision}{(pos. real) the slab-part of the regularized horseshoe,
+this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro. If
+specified, it is assumed that you want a fixed slab component and will take
+precedence over any provided values of \code{slab_dof} and \code{slab_scale};
+\code{slab_precision} is provided for backwards compatibility but will be going
+away in a future release, and the proper way to specify a fixed slab
+component with with precision 1/d^2 for some number d is through \code{slab_dof = Inf} and \code{slab_scale = d}.}
+
+\item{slab_dof}{see \code{slab_scale}}
 }
 \value{
 A \code{list} containing the following named elements:
 \itemize{
-  \item{scale1}{the solution, interpreted as c / sigma}
-  \item{diff_from_target1}{the difference between the numerical value and the target, should be close to zero}
-  \item{iter1}{number of iterations performed}
-  \item{prior_num1}{the resulting value of m_eff corresponding to this solution}
+\item{scale}{the solution, interpreted as c / sigma}
+\item{diff_from_target}{the difference between the numerical value and the target, should be close to zero}
+\item{iter}{number of iterations performed}
+\item{prior_num}{the resulting value of m_eff corresponding to this solution}
 }
 }
 \description{
-This function calculates a numerical-based solution to the quantity c / sigma in
-the equation at the end of first paragraph on page e50. It is intended to
-be provided as the value for beta_orig_scale and beta_aug_scale in the functions
-`glm_sab`, `glm_nab`, and `glm_standard`
+This function calculates a numerical-based solution to the quantity c / sigma
+in the equation at the end of first paragraph on page e50. It is intended to
+be provided as the value for beta_orig_scale and beta_aug_scale in the
+functions \code{glm_sab}, \code{glm_nab}, and \code{glm_standard}
 }
 \details{
-If the outcome of interest is binary, then sigma doesn't actually exist as a real
-parameter, and it will be set equal to 2 inside `glm_sab`,  `glm_nab`, or `glm_standard`.
-If the outcome of interest is continuous, then sigma is equipped with its own weak
-prior. In either case, it is not intended that the user scale by sigma "manually".
+If the outcome of interest is binary, then sigma doesn't actually exist as a
+real parameter, and it will be set equal to 2 inside \code{glm_sab},  \code{glm_nab},
+or \code{glm_standard}. If the outcome of interest is continuous, then sigma is
+equipped with its own weak prior. In either case, it is not intended that the
+user scale by sigma "manually".
 }

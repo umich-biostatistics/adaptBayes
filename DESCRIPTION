@@ -1,6 +1,6 @@
 Package: adaptBayes
 Title: Adaptive Bayesian Updates
-Version: 1.1.2
+Version: 2.0.0
 Authors@R: 
     c(
     person(given = "Philip", family = "Boonstra", role = c("aut"), email = "philb@umich.edu"),
@@ -14,7 +14,7 @@ Encoding: UTF-8
 LazyData: true
 Biarch: true
 Depends: 
-    R (>= 3.4.0)
+    R (>= 3.5.0)
 Imports: 
     methods,
     dplyr,
@@ -22,3 +22,7 @@ Imports:
     cmdstanr
 SystemRequirements: GNU make, CmdStan (https://mc-stan.org/users/interfaces/cmdstan)
 RoxygenNote: 7.2.0
+Roxygen: list(markdown = TRUE)
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3

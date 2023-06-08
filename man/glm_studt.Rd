@@ -10,44 +10,57 @@ glm_studt(
   family = "binomial",
   beta_scale,
   dof = 1,
-  slab_precision = (1/15)^2,
+  slab_dof = Inf,
+  slab_scale = 15,
+  mu_sd = 5,
   only_prior = F,
-  mc_warmup = 50,
-  mc_iter_after_warmup = 50,
+  mc_warmup = 1000,
+  mc_iter_after_warmup = 1000,
   mc_chains = 1,
   mc_thin = 1,
   mc_stepsize = 0.1,
   mc_adapt_delta = 0.9,
   mc_max_treedepth = 15,
   return_as_stanfit = FALSE,
-  seed = sample.int(.Machine$integer.max, 1)
+  seed = sample.int(.Machine$integer.max, 1),
+  slab_precision = NULL
 )
 }
 \arguments{
-\item{y}{(vector) outcomes corresponding to the type of glm desired. This should
-match whatever datatype is expected by the stan program.}
+\item{y}{(vector) outcomes corresponding to the type of glm desired. This
+should match whatever datatype is expected by the stan program.}
 
-\item{x_standardized}{(matrix) matrix of numeric values with number of rows equal
-to the length of y and number of columns equal to p+q. It is assumed without
-verification that each column is standardized to whatever scale the prior
-expects - in Boonstra and Barbaro, all predictors are marginally generated to have
-mean zero and unit variance, so no standardization is conducted. In practice,
-all data should be standardized to have a common scale before model fitting.
-If regression coefficients on the natural scale are desired, they be easily obtained
-through unstandardizing.}
+\item{x_standardized}{(matrix) matrix of numeric values with number of rows
+equal to the length of y and number of columns equal to p+q. It is assumed
+without verification that each column is standardized to whatever scale the
+prior expects - in Boonstra and Barbaro, all predictors are marginally
+generated to have mean zero and unit variance, so no standardization is
+conducted. In practice, all data should be standardized to have a common
+scale before model fitting. If regression coefficients on the natural scale
+are desired, they be easily obtained through unstandardizing.}
 
-\item{family}{(character) Similar to argument in `glm` with the same name, but
- here this must be a character, and currently only 'binomial' (if y is binary) or
-'gaussian' (if y is continuous) are valid choices.}
+\item{family}{(character) Similar to argument in \code{glm} with the same name,
+but here this must be a character, and currently only 'binomial' (if y is
+binary) or 'gaussian' (if y is continuous) are valid choices.}
 
-\item{beta_scale}{(pos. real) constants indicating the prior scale of the student-t prior.}
+\item{beta_scale}{(pos. real) constants indicating the prior scale of the
+student-t prior.}
 
 \item{dof}{(pos. integer) degrees of freedom for the student-t prior}
 
-\item{slab_precision}{(pos. real) the slab-part of the regularized horseshoe,
-this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro}
+\item{slab_dof}{see \code{slab_scale}}
 
-\item{only_prior}{(logical) should all data be ignored, sampling only from the prior?}
+\item{slab_scale}{(pos. real) these control the slab-part of the regularized
+horseshoe. Specifically, in the notation of Boonstra and Barbaro,
+d^2~InverseGamma(\code{slab_dof}/2, \code{slab_scale}^2*\code{slab_dof}/2). In Boonstra and
+Barbaro, d was fixed at 15, and you can achieve this by leaving these at
+their default values of \code{slab_dof} = Inf and \code{slab_scale} = 15.}
+
+\item{mu_sd}{(pos. real) the prior standard deviation for the intercept
+parameter mu}
+
+\item{only_prior}{(logical) should all data be ignored, sampling only from
+the prior?}
 
 \item{mc_warmup}{number of MCMC warm-up iterations}
 
@@ -67,16 +80,25 @@ this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro}
 object asis or should a summary of stanfit be returned as a regular list}
 
 \item{seed}{seed for the underlying STAN model to allow for reproducibility}
+
+\item{slab_precision}{(pos. real) the slab-part of the regularized horseshoe,
+this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro. If
+specified, it is assumed that you want a fixed slab component and will take
+precedence over any provided values of \code{slab_dof} and \code{slab_scale};
+\code{slab_precision} is provided for backwards compatibility but will be going
+away in a future release, and the proper way to specify a fixed slab
+component with with precision 1/d^2 for some number d is through \code{slab_dof = Inf} and \code{slab_scale = d}.}
 }
 \value{
 \code{list} object containing the draws and other information.
 }
 \description{
-Program for fitting a GLM equipped with a regularized student-t prior on the regression
-coefficients, parametrized using the normal-inverse-gamma distribution. The 'regularization'
-refers to the fact that the inverse-gamma scale is has a finite upper bound that
-it smoothly approaches. This method was not used in the simulation study but was
-used in the data analysis. Specifically, it corresponds to 'PedRESC2'.
+Program for fitting a GLM equipped with a regularized student-t prior on the
+regression coefficients, parametrized using the normal-inverse-gamma
+distribution. The 'regularization' refers to the fact that the inverse-gamma
+scale is has a finite upper bound that it smoothly approaches. This method
+was not used in the simulation study but was used in the data analysis.
+Specifically, it corresponds to 'PedRESC2'.
 }
 \examples{
 
@@ -88,10 +110,10 @@ used in the data analysis. Specifically, it corresponds to 'PedRESC2'.
                     family = "binomial",
                     beta_scale = 0.0231,
                     dof = 1,
-                    slab_precision = 0.00444,
+                    mu_sd = 5,
                     only_prior = 0,
-                    mc_warmup = 1000,
-                    mc_iter_after_warmup = 1000,
+                    mc_warmup = 200,
+                    mc_iter_after_warmup = 200,
                     mc_chains = 2,
                     mc_thin = 1,
                     mc_stepsize = 0.1,
@@ -105,10 +127,10 @@ used in the data analysis. Specifically, it corresponds to 'PedRESC2'.
                     family = "binomial",
                     beta_scale = 0.0231,
                     dof = 1,
-                    slab_precision = 0.00444,
+                    mu_sd = 5,
                     only_prior = 0,
-                    mc_warmup = 1000,
-                    mc_iter_after_warmup = 1000,
+                    mc_warmup = 200,
+                    mc_iter_after_warmup = 200,
                     mc_chains = 2,
                     mc_thin = 1,
                     mc_stepsize = 0.1,

@@ -14,54 +14,59 @@ glm_standard(
   beta_aug_scale,
   local_dof = 1,
   global_dof = 1,
-  slab_precision = (1/15)^2,
+  slab_dof = Inf,
+  slab_scale = 15,
+  mu_sd = 5,
   intercept_offset = NULL,
   only_prior = F,
-  mc_warmup = 50,
-  mc_iter_after_warmup = 50,
+  mc_warmup = 1000,
+  mc_iter_after_warmup = 1000,
   mc_chains = 1,
   mc_thin = 1,
   mc_stepsize = 0.1,
   mc_adapt_delta = 0.9,
   mc_max_treedepth = 15,
   return_as_stanfit = FALSE,
-  seed = sample.int(.Machine$integer.max, 1)
+  seed = sample.int(.Machine$integer.max, 1),
+  slab_precision = NULL
 )
 }
 \arguments{
-\item{y}{(vector) outcomes corresponding to the type of glm desired. This should
-match whatever datatype is expected by the stan program.}
+\item{y}{(vector) outcomes corresponding to the type of glm desired. This
+should match whatever datatype is expected by the stan program.}
 
-\item{x_standardized}{(matrix) matrix of numeric values with number of rows equal
-to the length of y and number of columns equal to p+q. It is assumed without
-verification that each column is standardized to whatever scale the prior
-expects - in Boonstra and Barbaro, all predictors are marginally generated to have
-mean zero and unit variance, so no standardization is conducted. In practice,
-all data should be standardized to have a common scale before model fitting.
-If regression coefficients on the natural scale are desired, they be easily obtained
-through unstandardizing.}
+\item{x_standardized}{(matrix) matrix of numeric values with number of rows
+equal to the length of y and number of columns equal to p+q. It is assumed
+without verification that each column is standardized to whatever scale the
+prior expects - in Boonstra and Barbaro, all predictors are marginally
+generated to have mean zero and unit variance, so no standardization is
+conducted. In practice, all data should be standardized to have a common
+scale before model fitting. If regression coefficients on the natural scale
+are desired, they be easily obtained through unstandardizing.}
 
-\item{family}{(character) Similar to argument in `glm` with the same name, but
- here this must be a character, and currently only 'binomial' (if y is binary) or
-'gaussian' (if y is continuous) are valid choices.}
+\item{family}{(character) Similar to argument in \code{glm} with the same name,
+but here this must be a character, and currently only 'binomial' (if y is
+binary) or 'gaussian' (if y is continuous) are valid choices.}
 
-\item{p}{see `q`}
+\item{p}{see \code{q}}
 
-\item{q}{(nonneg. integers) numbers, the sum of which add up to the number of columns
-in x_standardized. For the standard prior, this distinction is only needed if a different
-constant scale parameter (beta_orig_scale, beta_aug_scale), which is the constant 'c'
-in the notation of Boonstra and Barbaro, is used.}
+\item{q}{(nonneg. integers) numbers, the sum of which add up to the number of
+columns in x_standardized. For the standard prior, this distinction is only
+needed if a different constant scale parameter (beta_orig_scale,
+beta_aug_scale), which is the constant 'c' in the notation of Boonstra and
+Barbaro, is used.}
 
-\item{beta_orig_scale}{see `beta_aug_scale`}
+\item{beta_orig_scale}{see \code{beta_aug_scale}}
 
 \item{beta_aug_scale}{(pos. real) constants indicating the prior scale of the
-horseshoe. Both values correspond to 'c / sigma' in the notation of Boonstra and Barbaro,
-because that paper never considers beta_orig_scale!=beta_aug_scale. Use
-the function `solve_for_hiershrink_scale` to calculate this quantity. If 'y'
-is binary, then sigma doesn't actually exist as a
-parameter, and it will be set equal to 2 inside the function.
-If 'y' is continuous, then sigma is equipped with its own weak
-prior. In either case, it is not intended that the user scale by sigma "manually".}
+horseshoe. Both values correspond to 'c / sigma' in the notation of
+Boonstra and Barbaro, because that paper never considers
+beta_orig_scale!=beta_aug_scale. Use the function
+\code{solve_for_hiershrink_scale} to calculate this quantity. If 'y' is binary,
+then sigma doesn't actually exist as a parameter, and it will be set equal
+to 2 inside the function. If 'y' is continuous, then sigma is equipped with
+its own weak prior. In either case, it is not intended that the user scale
+by sigma "manually".}
 
 \item{local_dof}{(pos. integer) number indicating the degrees of freedom for
 lambda_j. Boonstra and Barbaro always used local_dof = 1. Choose a negative
@@ -71,18 +76,29 @@ value to tell the function that there are no local hyperparameters.}
 tau. Boonstra and Barbaro always used global_dof = 1. Choose a negative
 value to tell the function that there is no global hyperparameter.}
 
-\item{slab_precision}{(pos. real) the slab-part of the regularized horseshoe,
-this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro}
+\item{slab_dof}{see \code{slab_scale}}
 
-\item{intercept_offset}{(vector) vector of 0's and 1's equal having the same length as y.
-Those observations with a value of 1 have an additional constant offset in their linear
-predictor, effectively a different intercept. This is useful to jointly regress
-two datasets in which it is believed that the regression coefficients are the same
-but not the intercepts and could be useful (but was not used) in the simulation study
-to compare to a benchmark, namely if both the historical and current datasets
-were available but there is a desire to adjust for potentially different baseline prevalences.}
+\item{slab_scale}{(pos. real) these control the slab-part of the regularized
+horseshoe. Specifically, in the notation of Boonstra and Barbaro,
+d^2~InverseGamma(\code{slab_dof}/2, \code{slab_scale}^2*\code{slab_dof}/2). In Boonstra and
+Barbaro, d was fixed at 15, and you can achieve this by leaving these at
+their default values of \code{slab_dof} = Inf and \code{slab_scale} = 15.}
 
-\item{only_prior}{(logical) should all data be ignored, sampling only from the prior?}
+\item{mu_sd}{(pos. real) the prior standard deviation for the intercept
+parameter mu}
+
+\item{intercept_offset}{(vector) vector of 0's and 1's equal having the same
+length as y. Those observations with a value of 1 have an additional
+constant offset in their linear predictor, effectively a different
+intercept. This is useful to jointly regress two datasets in which it is
+believed that the regression coefficients are the same but not the
+intercepts and could be useful (but was not used) in the simulation study
+to compare to a benchmark, namely if both the historical and current
+datasets were available but there is a desire to adjust for potentially
+different baseline prevalences.}
+
+\item{only_prior}{(logical) should all data be ignored, sampling only from
+the prior?}
 
 \item{mc_warmup}{number of MCMC warm-up iterations}
 
@@ -102,13 +118,21 @@ were available but there is a desire to adjust for potentially different baselin
 object asis or should a summary of stanfit be returned as a regular list}
 
 \item{seed}{seed for the underlying STAN model to allow for reproducibility}
+
+\item{slab_precision}{(pos. real) the slab-part of the regularized horseshoe,
+this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro. If
+specified, it is assumed that you want a fixed slab component and will
+take precedence over any provided values of \code{slab_dof} and \code{slab_scale};
+however, \code{slab_precision} will be going away in a future release, and
+the proper way to specify a fixed slab component with with precision
+1/d^2 for some number d is through \code{slab_dof = Inf} and \code{slab_scale = d}.}
 }
 \value{
 \code{list} object containing the draws and other information.
 }
 \description{
-Program for fitting a GLM equipped with the 'standard' prior evaluated
-in Boonstra and Barbaro, which is the regularized horseshoe.
+Program for fitting a GLM equipped with the 'standard' prior evaluated in
+Boonstra and Barbaro, which is the regularized horseshoe.
 }
 \examples{
 
@@ -122,12 +146,12 @@ foo = glm_standard(y = historical$y_hist,
                    beta_orig_scale = 0.0231,
                    beta_aug_scale = 0.0231,
                    local_dof = 1,
-                   global_dof = 1,
-                   slab_precision = 0.00444,
+                   global_dof = 1,,
+                   mu_sd = 5,
                    intercept_offset = NULL,
                    only_prior = 0,
-                   mc_warmup = 1000,
-                   mc_iter_after_warmup = 1000,
+                   mc_warmup = 200,
+                   mc_iter_after_warmup = 200,
                    mc_chains = 2,
                    mc_thin = 1,
                    mc_stepsize = 0.1,
@@ -145,11 +169,11 @@ foo = glm_standard(y = historical$y_hist,
                     beta_aug_scale = 0.0223,
                     local_dof = 1,
                     global_dof = 1,
-                    slab_precision = 0.00444,
+                    mu_sd = 5,
                     intercept_offset = NULL,
                     only_prior = 0,
-                    mc_warmup = 1000,
-                    mc_iter_after_warmup = 1000,
+                    mc_warmup = 200,
+                    mc_iter_after_warmup = 200,
                     mc_chains = 2,
                     mc_thin = 1,
                     mc_stepsize = 0.1,

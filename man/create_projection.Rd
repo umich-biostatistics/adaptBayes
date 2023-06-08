@@ -8,7 +8,7 @@ create_projection(
   x_curr_orig,
   x_curr_aug,
   eigenvec_hist_var,
-  imputes_list = list(c(1, 15)),
+  imputes_list = list(c(1, 500)),
   seed_start = sample(.Machine$integer.max, 1),
   predictorMatrix = NULL
 )

@@ -11,17 +11,20 @@ glm_sab(
   alpha_prior_mean,
   alpha_prior_cov,
   aug_projection,
-  phi_dist,
-  phi_mean,
-  phi_sd,
+  phi_dist = "trunc_norm",
+  phi_mean = 1,
+  phi_sd = 0.25,
+  eta_param = 2.5,
   beta_orig_scale,
   beta_aug_scale,
   local_dof = 1,
   global_dof = 1,
-  slab_precision = (1/15)^2,
+  slab_dof = Inf,
+  slab_scale = 15,
+  mu_sd = 5,
   only_prior = F,
-  mc_warmup = 50,
-  mc_iter_after_warmup = 50,
+  mc_warmup = 1000,
+  mc_iter_after_warmup = 1000,
   mc_chains = 1,
   mc_thin = 1,
   mc_stepsize = 0.1,
@@ -30,67 +33,81 @@ glm_sab(
   return_as_stanfit = FALSE,
   eigendecomp_hist_var = NULL,
   scale_to_variance225 = NULL,
-  seed = sample.int(.Machine$integer.max, 1)
+  seed = sample.int(.Machine$integer.max, 1),
+  slab_precision = NULL
 )
 }
 \arguments{
-\item{y}{(vector) outcomes corresponding to the type of glm desired. This should
-match whatever datatype is expected by the stan program.}
+\item{y}{(vector) outcomes corresponding to the type of glm desired. This
+should match whatever datatype is expected by the stan program.}
 
-\item{x_standardized}{(matrix) matrix of numeric values with number of rows equal
-to the length of y and number of columns equal to p+q. It is assumed without
-verification that each column is standardized to whatever scale the prior
-expects - in Boonstra and Barbaro, all predictors are marginally generated to have
-mean zero and unit variance, so no standardization is conducted. In practice,
-all data should be standardized to have a common scale before model fitting.
-If regression coefficients on the natural scale are desired, they can be easily obtained
-through unstandardizing.}
+\item{x_standardized}{(matrix) matrix of numeric values with number of rows
+equal to the length of y and number of columns equal to p+q. It is assumed
+without verification that each column is standardized to whatever scale the
+prior expects - in Boonstra and Barbaro, all predictors are marginally
+generated to have mean zero and unit variance, so no standardization is
+conducted. In practice, all data should be standardized to have a common
+scale before model fitting. If regression coefficients on the natural scale
+are desired, they can be easily obtained through unstandardizing.}
 
-\item{family}{(character) Similar to argument in `glm` with the same name, but
- here this must be a character, and currently only 'binomial' (if y is binary) or
-'gaussian' (if y is continuous) are valid choices.}
+\item{family}{(character) Similar to argument in \code{glm} with the same name,
+but here this must be a character, and currently only 'binomial' (if y is
+binary) or 'gaussian' (if y is continuous) are valid choices.}
 
-\item{alpha_prior_mean}{(vector) p-length vector giving the mean of alpha from the
-historical analysis, corresponds to m_alpha in Boonstra and Barbaro}
+\item{alpha_prior_mean}{(vector) p-length vector giving the mean of alpha
+from the historical analysis, corresponds to m_alpha in Boonstra and
+Barbaro}
 
-\item{alpha_prior_cov}{(matrix) pxp positive definite matrix giving the variance of
-alpha from the historical analysis, corresponds to S_alpha in Boonstra and Barbaro}
+\item{alpha_prior_cov}{(matrix) pxp positive definite matrix giving the
+variance of alpha from the historical analysis, corresponds to S_alpha in
+Boonstra and Barbaro}
 
-\item{aug_projection}{(matrix) pxq matrix that approximately projects the regression coefficients of
-the augmented predictors onto the space of the regression coefficients for the original
-predictors.This is the matrix P in the notation of Boonstra and Barbaro.
-It can be calculated using the function 'create_projection'}
+\item{aug_projection}{(matrix) pxq matrix that approximately projects the
+regression coefficients of the augmented predictors onto the space of the
+regression coefficients for the original predictors.This is the matrix P in
+the notation of Boonstra and Barbaro. It can be calculated using the
+function 'create_projection'}
 
 \item{phi_dist}{(character) the name of the distribution to use as a prior on
 phi. This must be either 'trunc_norm' or 'beta'.}
 
-\item{phi_mean}{see `phi_sd`}
+\item{phi_mean}{see \code{phi_sd}}
 
-\item{phi_sd}{(real) prior mean and standard deviation of phi.
-At a minimum, phi_mean must be in [0,1] and phi_sd must be non-negative (you *can*
-choose phi_sd = 0, meaning that phi is identically equal to phi_mean).
-If 'phi_dist' is 'trunc_norm', then 'phi_mean' and 'phi_sd'
-are interpreted as the parameters of the *untruncated* normal distribution and so are not actually
-the parameters of the resulting distribution after truncating phi to the [0,1] interval.
-If 'phi_dist' is 'beta', then 'phi_mean' and 'phi_sd' are interpreted as the literal mean and
-standard deviation, from which the shape parameters are calculated. When 'phi_dist'
-is 'beta', not all choices of 'phi_mean' and 'phi_sd' are valid, e.g. the standard
-deviation of the beta distribution must be no greater than sqrt(phi_mean * (1 - phi_mean)).
-Also, the beta distribution is difficult to sample from if one or both of the
-shape parameters is much less than 1. An error will be thrown if an invalid parameterization
-is provided, and a warning will be thrown if a parameterization is provided
+\item{phi_sd}{(real) prior mean and standard deviation of phi. At a minimum,
+phi_mean must be between 0 and 1 (inclusive) and phi_sd must be
+non-negative (you \emph{can} choose phi_sd = 0, meaning that phi is identically
+equal to phi_mean). If 'phi_dist' is 'trunc_norm', then 'phi_mean' and
+'phi_sd' are interpreted as the parameters of the \emph{untruncated} normal
+distribution and so are not actually the parameters of the resulting
+distribution after truncating phi to the 0,1 interval. If 'phi_dist' is
+'beta', then 'phi_mean' and 'phi_sd' are interpreted as the literal mean
+and standard deviation, from which the shape parameters are calculated.
+When 'phi_dist' is 'beta', not all choices of 'phi_mean' and 'phi_sd' are
+valid, e.g. the standard deviation of the beta distribution must be no
+greater than sqrt(phi_mean * (1 - phi_mean)). Also, the beta distribution
+is difficult to sample from if one or both of the shape parameters is much
+less than 1. An error will be thrown if an invalid parameterization is
+provided, and a warning will be thrown if a parameterization is provided
 that is likely to result in a "challenging" prior.}
 
-\item{beta_orig_scale}{see `beta_aug_scale`}
+\item{eta_param}{(real) prior hyperparmeter for eta, which scales the
+\code{alpha_prior_cov} in the adaptive prior contribution and is apriori
+distributed as an inverse-gamma random variable. Specifically, \code{eta_param}
+is a common value for the shape and rate of the inverse-gamma, meaning that
+larger values cause the prior distribution of eta to concentrate around
+one. You may choose \code{eta_param = Inf} to make eta identically equal to 1}
+
+\item{beta_orig_scale}{see \code{beta_aug_scale}}
 
 \item{beta_aug_scale}{(pos. real) constants indicating the prior scale of the
-horseshoe. Both values correspond to 'c / sigma' in the notation of Boonstra and Barbaro,
-because that paper never considers beta_orig_scale!=beta_aug_scale. Use
-the function `solve_for_hiershrink_scale` to calculate this quantity. If 'y'
-is binary, then sigma doesn't actually exist as a
-parameter, and it will be set equal to 2 inside the function.
-If 'y' is continuous, then sigma is equipped with its own weak
-prior. In either case, it is not intended that the user scale by sigma "manually".}
+horseshoe. Both values correspond to 'c / sigma' in the notation of
+Boonstra and Barbaro, because that paper never considers
+beta_orig_scale!=beta_aug_scale. Use the function
+\code{solve_for_hiershrink_scale} to calculate this quantity. If 'y' is binary,
+then sigma doesn't actually exist as a parameter, and it will be set equal
+to 2 inside the function. If 'y' is continuous, then sigma is equipped with
+its own weak prior. In either case, it is not intended that the user scale
+by sigma "manually".}
 
 \item{local_dof}{(pos. integer) number indicating the degrees of freedom for
 lambda_j. Boonstra and Barbaro always used local_dof = 1. Choose a negative
@@ -100,10 +117,19 @@ value to tell the function that there are no local hyperparameters.}
 tau. Boonstra and Barbaro always used global_dof = 1. Choose a negative
 value to tell the function that there is no global hyperparameter.}
 
-\item{slab_precision}{(pos. real) the slab-part of the regularized horseshoe,
-this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro}
+\item{slab_dof}{see \code{slab_scale}}
 
-\item{only_prior}{(logical) should all data be ignored, sampling only from the prior?}
+\item{slab_scale}{(pos. real) these control the slab-part of the regularized
+horseshoe. Specifically, in the notation of Boonstra and Barbaro,
+d^2~InverseGamma(\code{slab_dof}/2, \code{slab_scale}^2*\code{slab_dof}/2). In Boonstra and
+Barbaro, d was fixed at 15, and you can achieve this by leaving these at
+their default values of \code{slab_dof} = Inf and \code{slab_scale} = 15.}
+
+\item{mu_sd}{(pos. real) the prior standard deviation for the intercept
+parameter mu}
+
+\item{only_prior}{(logical) should all data be ignored, sampling only from
+the prior?}
 
 \item{mc_warmup}{number of MCMC warm-up iterations}
 
@@ -124,13 +150,23 @@ object asis or should a summary of stanfit be returned as a regular list}
 
 \item{eigendecomp_hist_var}{R object of class 'eigen' containing a pxp matrix
 of eigenvectors in each row (equivalent to v_0 in Boonstra and Barbaro) and
-a p-length vector of eigenvalues. This is by default equal to eigen(alpha_prior_cov)}
+a p-length vector of eigenvalues. This is by default equal to
+eigen(alpha_prior_cov)}
 
 \item{scale_to_variance225}{a vector assumed to be such that, when multiplied
 by the diagonal elements of alpha_prior_cov, the result is a vector of
-elements each equal to 225. This is explicitly calculated if it is not provided}
+elements each equal to 225. This is explicitly calculated if it is not
+provided}
 
 \item{seed}{seed for the underlying STAN model to allow for reproducibility}
+
+\item{slab_precision}{(pos. real) the slab-part of the regularized horseshoe,
+this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro. If
+specified, it is assumed that you want a fixed slab component and will take
+precedence over any provided values of \code{slab_dof} and \code{slab_scale};
+\code{slab_precision} is provided for backwards compatibility but will be going
+away in a future release, and the proper way to specify a fixed slab
+component with with precision 1/d^2 for some number d is through \code{slab_dof = Inf} and \code{slab_scale = d}.}
 }
 \value{
 \code{list} object containing the draws and other information.
@@ -166,14 +202,15 @@ foo = glm_sab(y = current$y_curr,
               phi_dist = "trunc_norm",
               phi_mean = 1,
               phi_sd = 0.25,
+              eta_param = 2.5,
               beta_orig_scale = 0.0223,
               beta_aug_scale = 0.0223,
               local_dof = 1,
               global_dof = 1,
-              slab_precision = 0.00444,
+              mu_sd = 5,
               only_prior = 0,
-              mc_warmup = 1000,
-              mc_iter_after_warmup = 1000,
+              mc_warmup = 200,
+              mc_iter_after_warmup = 200,
               mc_chains = 2,
               mc_thin = 1,
               mc_stepsize = 0.1,

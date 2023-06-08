@@ -1,7 +1,9 @@
-#' Fit GLM with the 'naive adaptive bayes' prior
+#' Fit GLM with the 'sensible bayes' prior
 #'
-#' Program for fitting a GLM equipped with the 'naive adaptive bayes' prior
-#' evaluated in the manuscript.
+#' Program for fitting a GLM equipped with a 'sensible bayes' prior, meaning
+#' that it uses \eqn{\pi_{SB}} (Equation 3.9) from the manuscript but not
+#' the horseshoe prior. This prior is not evaluated in the manuscript.
+#'
 #'
 #' @param y (vector) outcomes corresponding to the type of glm desired. This
 #'   should match whatever datatype is expected by the stan program.
@@ -22,6 +24,11 @@
 #' @param alpha_prior_cov (matrix) pxp positive definite matrix giving the
 #'   variance of alpha from the historical analysis, corresponds to S_alpha in
 #'   Boonstra and Barbaro
+#' @param aug_projection (matrix) pxq matrix that approximately projects the
+#'   regression coefficients of the augmented predictors onto the space of the
+#'   regression coefficients for the original predictors.This is the matrix P in
+#'   the notation of Boonstra and Barbaro. It can be calculated using the
+#'   function 'create_projection'
 #' @param phi_dist (character) the name of the distribution to use as a prior on
 #'   phi. This must be either 'trunc_norm' or 'beta'.
 #' @param phi_mean see `phi_sd`
@@ -47,32 +54,6 @@
 #'   is a common value for the shape and rate of the inverse-gamma, meaning that
 #'   larger values cause the prior distribution of eta to concentrate around
 #'   one. You may choose `eta_param = Inf` to make eta identically equal to 1
-#' @param beta_orig_scale see `beta_aug_scale`
-#' @param beta_aug_scale (pos. real) constants indicating the prior scale of the
-#'   horseshoe. Both values correspond to 'c / sigma' in the notation of
-#'   Boonstra and Barbaro, because that paper never considers
-#'   beta_orig_scale!=beta_aug_scale. Use the function
-#'   `solve_for_hiershrink_scale` to calculate this quantity. If 'y' is binary,
-#'   then sigma doesn't actually exist as a parameter, and it will be set equal
-#'   to 2 inside the function. If 'y' is continuous, then sigma is equipped with
-#'   its own weak prior. In either case, it is not intended that the user scale
-#'   by sigma "manually".
-#' @param beta_aug_scale_tilde (pos. real) constant indicating the prior scale
-#'   of the horseshoe for the augmented covariates when phi = 1, i.e. when the
-#'   historical analysis is fully used. This corresponds to tilde_c in Boonstra
-#'   and Barbaro
-#' @param local_dof (pos. integer) number indicating the degrees of freedom for
-#'   lambda_j. Boonstra and Barbaro always used local_dof = 1. Choose a negative
-#'   value to tell the function that there are no local hyperparameters.
-#' @param global_dof (pos. integer) number indicating the degrees of freedom for
-#'   tau. Boonstra and Barbaro always used global_dof = 1. Choose a negative
-#'   value to tell the function that there is no global hyperparameter.
-#' @param slab_dof see `slab_scale`
-#' @param slab_scale (pos. real) these control the slab-part of the regularized
-#'   horseshoe. Specifically, in the notation of Boonstra and Barbaro,
-#'   d^2~InverseGamma(`slab_dof`/2, `slab_scale`^2*`slab_dof`/2). In Boonstra and
-#'   Barbaro, d was fixed at 15, and you can achieve this by leaving these at
-#'   their default values of `slab_dof` = Inf and `slab_scale` = 15.
 #' @param mu_sd (pos. real) the prior standard deviation for the intercept
 #'   parameter mu
 #' @param only_prior (logical) should all data be ignored, sampling only from
@@ -95,17 +76,8 @@
 #'   elements each equal to 225. This is explicitly calculated if it is not
 #'   provided
 #' @param seed seed for the underlying STAN model to allow for reproducibility
-#' @param slab_precision (pos. real) the slab-part of the regularized horseshoe,
-#'   this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro. If
-#'   specified, it is assumed that you want a fixed slab component and will take
-#'   precedence over any provided values of `slab_dof` and `slab_scale`;
-#'   `slab_precision` is provided for backwards compatibility but will be going
-#'   away in a future release, and the proper way to specify a fixed slab
-#'   component with with precision 1/d^2 for some number d is through `slab_dof
-#'   = Inf` and `slab_scale = d`.
 #'
 #' @return `list` object containing the draws and other information.
-#'
 #'
 #' @examples
 #'
@@ -116,69 +88,63 @@
 #'                                   0.00216, -0.01029, 0.01991, -0.00428,
 #'                                   -0.00637, 0.00500, -0.00428, 0.01650),
 #'                          byrow = FALSE, nrow = 4);
+#'
 #' scale_to_variance225 = diag(alpha_prior_cov) / 225;
 #' eigendecomp_hist_var = eigen(alpha_prior_cov);
+#' aug_projection1 = matrix(data = c(0.0608, -0.02628, -0.0488, 0.0484, 0.449, -0.0201,
+#'                                   0.5695, -0.00855, 0.3877, 0.0729, 0.193, 0.4229,
+#'                                   0.1816, 0.37240, 0.1107, 0.1081, -0.114, 0.3704,
+#'                                   0.1209, 0.03683, -0.1517, 0.2178, 0.344, -0.1427),
+#'                          byrow = TRUE, nrow = 4);
 #'
-#' foo = glm_nab(y = current$y_curr,
-#'               x_standardized = current[,2:11],
-#'               family = "binomial",
-#'               alpha_prior_mean = c(1.462, -1.660, 0.769, -0.756),
-#'               alpha_prior_cov = alpha_prior_cov,
-#'               phi_dist = "trunc_norm",
-#'               phi_mean = 1,
-#'               phi_sd = 0.25,
-#'               eta_param = 2.5,
-#'               beta_orig_scale = 0.0223,
-#'               beta_aug_scale = 0.0223,
-#'               beta_aug_scale_tilde = 0.05,
-#'               local_dof = 1,
-#'               global_dof = 1,
-#'               mu_sd = 5,
-#'               only_prior = 0,
-#'               mc_warmup = 200,
-#'               mc_iter_after_warmup = 200,
-#'               mc_chains = 2,
-#'               mc_thin = 1,
-#'               mc_stepsize = 0.1,
-#'               mc_adapt_delta = 0.999,
-#'               mc_max_treedepth = 15,
-#'               eigendecomp_hist_var = eigendecomp_hist_var,
-#'               scale_to_variance225 = scale_to_variance225);
+#' foo = glm_sb(y = current$y_curr,
+#'              x_standardized = current[,2:11],
+#'              family = "binomial",
+#'              alpha_prior_mean = c(1.462, -1.660, 0.769, -0.756),
+#'              alpha_prior_cov = alpha_prior_cov,
+#'              aug_projection = aug_projection1,
+#'              phi_dist = "trunc_norm",
+#'              phi_mean = 1,
+#'              phi_sd = 0.25,
+#'              eta_param = 2.5,
+#'              mu_sd = 5,
+#'              only_prior = 0,
+#'              mc_warmup = 200,
+#'              mc_iter_after_warmup = 200,
+#'              mc_chains = 2,
+#'              mc_thin = 1,
+#'              mc_stepsize = 0.1,
+#'              mc_adapt_delta = 0.999,
+#'              mc_max_treedepth = 15,
+#'              eigendecomp_hist_var = eigendecomp_hist_var,
+#'              scale_to_variance225 = scale_to_variance225);
 #'
 #' @import cmdstanr dplyr
-#'
 #' @export
 
-glm_nab = function(y,
-                   x_standardized,
-                   family = "binomial",
-                   alpha_prior_mean,
-                   alpha_prior_cov,
-                   phi_dist = "trunc_norm",
-                   phi_mean = 1,
-                   phi_sd = 0.25,
-                   eta_param = 2.5,
-                   beta_orig_scale,
-                   beta_aug_scale,
-                   beta_aug_scale_tilde,
-                   local_dof = 1,
-                   global_dof = 1,
-                   slab_dof = Inf,
-                   slab_scale = 15,
-                   mu_sd = 5,
-                   only_prior = F,
-                   mc_warmup = 1e3,
-                   mc_iter_after_warmup = 1e3,
-                   mc_chains = 1,
-                   mc_thin = 1,
-                   mc_stepsize = 0.1,
-                   mc_adapt_delta = 0.9,
-                   mc_max_treedepth = 15,
-                   return_as_stanfit = FALSE,
-                   eigendecomp_hist_var = NULL,
-                   scale_to_variance225 = NULL,
-                   seed = sample.int(.Machine$integer.max, 1),
-                   slab_precision = NULL
+glm_sb = function(y,
+                  x_standardized,
+                  family = "binomial",
+                  alpha_prior_mean,
+                  alpha_prior_cov,
+                  aug_projection,
+                  phi_dist = "trunc_norm",
+                  phi_mean = 1,
+                  phi_sd = 0.25,
+                  eta_param = 2.5,
+                  mu_sd = 5,
+                  only_prior = F,
+                  mc_warmup = 1e3,
+                  mc_iter_after_warmup = 1e3,
+                  mc_chains = 1,
+                  mc_thin = 1,
+                  mc_stepsize = 0.1,
+                  mc_adapt_delta = 0.9,
+                  mc_max_treedepth = 15,
+                  return_as_stanfit = FALSE,
+                  eigendecomp_hist_var = NULL,
+                  scale_to_variance225 = NULL,
+                  seed = sample.int(.Machine$integer.max, 1)
 ) {
 
   if(family != "gaussian" && family != "binomial") {
@@ -208,19 +174,12 @@ glm_nab = function(y,
   if(eta_param < 0) {stop("'eta_param' must be non-negative")}
   if(mu_sd < 0) {stop("'mu_sd' must be non-negative")}
 
-  if(!is.null(slab_precision)) {
-    slab_dof = Inf;
-    slab_scale = 1 / sqrt(slab_precision);
-    message(paste0("'slab_precision' will be going away in a future release; use 'slab_dof = Inf' and 'slab_scale = 1/sqrt(",slab_precision,")'"))
-  }
-
   if(phi_dist == "beta") {
 
     sd_mean_fraction =
-      case_when(
+      ifelse(
         # If phi_sd = 0, then phi equals phi_mean always (even for phi_mean = 1)
-        phi_sd == 0 ~ 0,
-        TRUE ~ phi_sd / sqrt(phi_mean * (1 - phi_mean)))
+        phi_sd == 0, 0, phi_sd / sqrt(phi_mean * (1 - phi_mean)))
     if(sd_mean_fraction >= 1) {
       stop("'phi_sd' must be less than 'sqrt(phi_mean*(1-phi_mean))' to yield a valid beta distribution.")
     } else if (sd_mean_fraction >= 0.85) {
@@ -235,19 +194,17 @@ glm_nab = function(y,
   if(phi_mean == 1 && phi_sd == 0 && is.infinite(eta_param)) {
     model_file <-
       system.file("stan",
-                  paste0("nab_simple_", family, ".stan"),
+                  paste0("sb_simple_", family, ".stan"),
                   package = "adaptBayes",
                   mustWork = TRUE)
   } else {
     model_file <-
       system.file("stan",
-                  paste0("nab_", family, ".stan"),
+                  paste0("sb_", family, ".stan"),
                   package = "adaptBayes",
                   mustWork = TRUE)
   }
-
   model <- cmdstanr::cmdstan_model(model_file)
-
 
   curr_fit <-
     tryCatch.W.E(
@@ -257,17 +214,11 @@ glm_nab = function(y,
                     q_stan = q,
                     y_stan = y,
                     x_standardized_stan = x_standardized,
+                    aug_projection_stan = aug_projection,
                     alpha_prior_mean_stan = alpha_prior_mean,
                     alpha_prior_cov_stan = alpha_prior_cov,
                     sqrt_eigenval_hist_var_stan = sqrt_eigenval_hist_var,
                     eigenvec_hist_var_stan = eigenvec_hist_var,
-                    local_dof_stan = local_dof,
-                    global_dof_stan = global_dof,
-                    beta_orig_scale_stan = beta_orig_scale,
-                    beta_aug_scale_stan = beta_aug_scale,
-                    beta_aug_scale_tilde_stan = beta_aug_scale_tilde,
-                    slab_dof_stan = slab_dof,
-                    slab_scale_stan = slab_scale,
                     scale_to_variance225 = scale_to_variance225,
                     phi_prior_type = ifelse(phi_dist == "trunc_norm", 1L, 0L),
                     phi_mean_stan = phi_mean,
@@ -310,10 +261,8 @@ glm_nab = function(y,
          max_rhat = max(model_summary$rhat, na.rm=T),
          mu = curr_fit$value$draws("mu", format="matrix")[, 1, drop = T],
          beta = curr_fit$value$draws("beta", format="matrix"),
-         theta_orig =  curr_fit$value$draws("theta_orig", format="matrix"),
-         theta_aug = curr_fit$value$draws("theta_aug", format="matrix"),
-         slab = curr_fit$value$draws("slab_copy", format="matrix"),
          phi = phi,
          eta = eta);
   }
 }
+
