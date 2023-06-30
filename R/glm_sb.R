@@ -1,8 +1,9 @@
 #' Fit GLM with the 'sensible bayes' prior
 #'
-#' Program for fitting a GLM equipped with a 'sensible bayes' prior, meaning
+#' This is the non-adaptive version of the sensible prior, meaning
 #' that it uses \eqn{\pi_{SB}} (Equation 3.9) from the manuscript but not
-#' the horseshoe prior. This prior is not evaluated in the manuscript.
+#' the horseshoe prior. This prior is not evaluated in the manuscript. See
+#' [adaptBayes::glm_sab()] for the adaptive variant.
 #'
 #'
 #' @param y (vector) outcomes corresponding to the type of glm desired. This
@@ -224,8 +225,11 @@ glm_sb = function(y,
                     phi_mean_stan = phi_mean,
                     phi_sd_stan = phi_sd,
                     eta_param_stan = eta_param,
+                    omega_mean_stan = 0.0,
+                    omega_sd_stan = 0.0,
                     mu_sd_stan = mu_sd,
-                    only_prior = as.integer(only_prior)),
+                    only_prior = as.integer(only_prior),
+                    omega_sq_in_variance = 0L),
         iter_warmup = mc_warmup,
         iter = mc_iter_after_warmup,
         chains = mc_chains,

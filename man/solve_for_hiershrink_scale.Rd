@@ -9,7 +9,7 @@ solve_for_hiershrink_scale(
   npar,
   local_dof = 1,
   global_dof = 1,
-  slab_df = Inf,
+  slab_dof = Inf,
   slab_scale = 15,
   n,
   tol = .Machine$double.eps^0.5,
@@ -32,6 +32,8 @@ value to tell the function that there are no local hyperparameters.}
 \item{global_dof}{(pos. integer) number indicating the degrees of freedom for
 tau. Boonstra and Barbaro always used global_dof = 1. Choose a negative
 value to tell the function that there is no global hyperparameter.}
+
+\item{slab_dof}{see \code{slab_scale}}
 
 \item{slab_scale}{(pos. real) these control the slab-part of the regularized
 horseshoe. Specifically, in the notation of Boonstra and Barbaro,
@@ -57,8 +59,6 @@ precedence over any provided values of \code{slab_dof} and \code{slab_scale};
 \code{slab_precision} is provided for backwards compatibility but will be going
 away in a future release, and the proper way to specify a fixed slab
 component with with precision 1/d^2 for some number d is through \code{slab_dof = Inf} and \code{slab_scale = d}.}
-
-\item{slab_dof}{see \code{slab_scale}}
 }
 \value{
 A \code{list} containing the following named elements:

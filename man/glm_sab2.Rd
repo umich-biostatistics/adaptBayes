@@ -14,8 +14,10 @@ glm_sab2(
   phi_dist = "trunc_norm",
   phi_mean = 1,
   phi_sd = 0.25,
-  psi_mean = 0,
-  psi_sd = 0.25,
+  eta_param = Inf,
+  omega_mean = 0,
+  omega_sd = 0.25,
+  omega_sq_in_variance = TRUE,
   beta_orig_scale,
   beta_aug_scale,
   local_dof = 1,
@@ -91,16 +93,28 @@ less than 1. An error will be thrown if an invalid parameterization is
 provided, and a warning will be thrown if a parameterization is provided
 that is likely to result in a "challenging" prior.}
 
-\item{psi_mean}{see \code{psi_sd}}
+\item{eta_param}{(real) prior hyperparmeter for eta, which scales the
+\code{alpha_prior_cov} in the adaptive prior contribution and is apriori
+distributed as an inverse-gamma random variable. Specifically, \code{eta_param}
+is a common value for the shape and rate of the inverse-gamma, meaning that
+larger values cause the prior distribution of eta to concentrate around
+one. You may choose \code{eta_param = Inf} to make eta identically equal to 1}
 
-\item{psi_sd}{(real) prior mean and standard deviation for psi, which is
+\item{omega_mean}{see \code{omega_sd}}
+
+\item{omega_sd}{(real) prior mean and standard deviation for omega, which is
 apriori distributed as a log-normal random variable. The log-normal is
 parametrized such that these are the mean and normal of the log of the
 random variable, not the random variable itself. If the link function is
 the identity function, i.e. \code{family = "gaussian"}, then the theory suggests
-that this should be equal to 1 and so you should choose psi_mean and psi_sd
+that this should be equal to 1 and so you should choose omega_mean and omega_sd
 close to zero. For non-linear link functions,i.e. \code{family = "binomial"},
-you should choose positive (but probably not too large) values for psi_sd.}
+you should choose positive (but probably not too large) values for omega_sd.}
+
+\item{omega_sq_in_variance}{(logical) should omega^2 additionally scale the
+prior variance? If \code{TRUE}, then the prior variance will be
+\code{eta} * \code{omega}^2 * \code{alpha_prior_cov.} If \code{FALSE}, then the prior variance
+will be \code{eta} * \code{alpha_prior_cov}.}
 
 \item{beta_orig_scale}{see \code{beta_aug_scale}}
 
@@ -179,7 +193,7 @@ component with with precision 1/d^2 for some number d is through \code{slab_dof 
 \description{
 Program for fitting a GLM equipped with the yet-unpublished version 2 of the
 'sensible adaptive bayes' prior. Version 2 refers to \eqn{\beta^o + \bm P
-\beta^a \sim N(\psi m_\alpha, \psi^2 {\bm S}_\alpha / \phi)} (contrast to
+\beta^a \sim N(\omega m_\alpha, \eta \omega^2 {\bm S}_\alpha / \phi)} (contrast to
 Version 1, the original SAB from Boonstra and Barbaro, which is implemented
 in \code{\link[=glm_sab]{glm_sab()}} and which uses \eqn{\beta^o + \bm P \beta^a \sim
 N(m_\alpha, \eta {\bm S}_\alpha / \phi)})
@@ -211,8 +225,10 @@ foo = glm_sab2(y = current$y_curr,
               phi_dist = "trunc_norm",
               phi_mean = 1,
               phi_sd = 0.25,
-              psi_mean = 0,
-              psi_sd = 0.25,
+              eta_param = Inf,
+              omega_mean = 0,
+              omega_sd = 0.25,
+              omega_sq_in_variance = TRUE,
               beta_orig_scale = 0.0223,
               beta_aug_scale = 0.0223,
               local_dof = 1,

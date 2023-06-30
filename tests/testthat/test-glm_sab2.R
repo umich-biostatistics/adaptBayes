@@ -37,8 +37,8 @@ test_that("glm_sab2_simple_binomial runs", {
                        beta_aug_scale = 1,
                        phi_mean = 1,
                        phi_sd = 0,
-                       psi_mean = 0,
-                       psi_sd = 0,
+                       omega_mean = 0,
+                       omega_sd = 0,
                        mc_warmup = 50,
                        mc_iter_after_warmup = 50,
                        only_prior = TRUE), "list")
@@ -55,8 +55,8 @@ test_that("glm_sab2_simple_gaussian runs", {
                        beta_aug_scale = 1,
                        phi_mean = 1,
                        phi_sd = 0,
-                       psi_mean = 0,
-                       psi_sd = 0,
+                       omega_mean = 0,
+                       omega_sd = 0,
                        mc_warmup = 50,
                        mc_iter_after_warmup = 50,
                        only_prior = TRUE), "list")

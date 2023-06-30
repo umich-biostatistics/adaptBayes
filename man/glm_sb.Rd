@@ -129,9 +129,10 @@ provided}
 \code{list} object containing the draws and other information.
 }
 \description{
-Program for fitting a GLM equipped with a 'sensible bayes' prior, meaning
+This is the non-adaptive version of the sensible prior, meaning
 that it uses \eqn{\pi_{SB}} (Equation 3.9) from the manuscript but not
-the horseshoe prior. This prior is not evaluated in the manuscript.
+the horseshoe prior. This prior is not evaluated in the manuscript. See
+\code{\link[=glm_sab]{glm_sab()}} for the adaptive variant.
 }
 \examples{
 
