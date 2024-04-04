@@ -54,6 +54,7 @@
 #' }
 #'
 #'
+#' @importFrom stats rgamma
 #' @export
 
 solve_for_hiershrink_scale = function(target_mean,

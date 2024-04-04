@@ -1,8 +1,9 @@
 #' Fit GLM with the 'sensible bayes' prior
 #'
-#' Program for fitting a GLM equipped with a 'sensible bayes' prior, meaning
+#' This is the non-adaptive version of the sensible prior, meaning
 #' that it uses \eqn{\pi_{SB}} (Equation 3.9) from the manuscript but not
-#' the horseshoe prior. This prior is not evaluated in the manuscript.
+#' the horseshoe prior. This prior is not evaluated in the manuscript. See
+#' [adaptBayes::glm_sab()] for the adaptive variant.
 #'
 #'
 #' @param y (vector) outcomes corresponding to the type of glm desired. This
@@ -65,8 +66,8 @@
 #' @param mc_stepsize positive stepsize
 #' @param mc_adapt_delta between 0 and 1
 #' @param mc_max_treedepth max tree depth
-#' @param return_as_stanfit (logical) should the function return the stanfit
-#'   object asis or should a summary of stanfit be returned as a regular list
+#' @param return_as_CmdStanMCMC (logical) should the function return the CmdStanMCMC
+#'   object asis or should a summary of CmdStanMCMC be returned as a regular list
 #' @param eigendecomp_hist_var R object of class 'eigen' containing a pxp matrix
 #'   of eigenvectors in each row (equivalent to v_0 in Boonstra and Barbaro) and
 #'   a p-length vector of eigenvalues. This is by default equal to
@@ -141,7 +142,7 @@ glm_sb = function(y,
                   mc_stepsize = 0.1,
                   mc_adapt_delta = 0.9,
                   mc_max_treedepth = 15,
-                  return_as_stanfit = FALSE,
+                  return_as_CmdStanMCMC = FALSE,
                   eigendecomp_hist_var = NULL,
                   scale_to_variance225 = NULL,
                   seed = sample.int(.Machine$integer.max, 1)
@@ -224,8 +225,11 @@ glm_sb = function(y,
                     phi_mean_stan = phi_mean,
                     phi_sd_stan = phi_sd,
                     eta_param_stan = eta_param,
+                    omega_mean_stan = 0.0,
+                    omega_sd_stan = 0.0,
                     mu_sd_stan = mu_sd,
-                    only_prior = as.integer(only_prior)),
+                    only_prior = as.integer(only_prior),
+                    omega_sq_in_variance = 0L),
         iter_warmup = mc_warmup,
         iter = mc_iter_after_warmup,
         chains = mc_chains,
@@ -241,12 +245,12 @@ glm_sb = function(y,
     stop(curr_fit$value);
   }
 
-  if(return_as_stanfit) {
+  if(return_as_CmdStanMCMC) {
     curr_fit$value;
 
   } else {
 
-    model_diagnostics <- curr_fit$value$sampler_diagnostics()
+    model_diagnostics <- curr_fit$value$diagnostic_summary()
     model_summary <- curr_fit$value$summary()
 
     if(phi_mean == 1 && phi_sd == 0 && is.infinite(eta_param)) {
@@ -257,7 +261,9 @@ glm_sb = function(y,
       eta = curr_fit$value$draws("eta_copy", format="matrix")[, 1, drop = T];
     }
 
-    list(num_divergences = sum(model_diagnostics[,,"divergent__"]),
+    list(num_divergences = sum(model_diagnostics$num_divergent),
+         num_max_treedepth = sum(model_diagnostics$num_max_treedepth),
+         min_ebfmi = min(model_diagnostics$ebfmi),
          max_rhat = max(model_summary$rhat, na.rm=T),
          mu = curr_fit$value$draws("mu", format="matrix")[, 1, drop = T],
          beta = curr_fit$value$draws("beta", format="matrix"),

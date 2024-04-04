@@ -1,6 +1,5 @@
-// Sensible Bayes (stable version)
-// This is only (Equation 3.9) from the manuscript, i.e. there is no
-// horseshoe shrinkage
+// Sensible Bayes, binomial outcomes
+// This lacks the additional horseshoe shrinkage of the SAB prior.
 data {
   int<lower = 1> n_stan; // n_curr
   int<lower = 1> p_stan; // number of original covariates
@@ -17,8 +16,11 @@ data {
   real<lower = 0, upper = 1> phi_mean_stan; //
   real<lower = 0> phi_sd_stan; //
   real<lower = 0> eta_param_stan; // eta ~ IG(eta_param_stan, eta_param_stan)
+  real omega_mean_stan; //
+  real<lower = 0> omega_sd_stan; //
   real<lower = 0> mu_sd_stan; // prior standard deviation on intercept
   int<lower = 0, upper = 1> only_prior;//if 1, ignore the model and data and generate from the prior only
+  int<lower = 0, upper = 1> omega_sq_in_variance; // if 1, then omega^2 will scale the variance of the sab prior. Otherwise it won't
 }
 transformed data {
   vector[p_stan] zero_vec;
@@ -39,8 +41,9 @@ parameters {
   real mu;
   vector[p_stan] beta_orig; //
   vector[q_stan] beta_aug; //
-  real<lower = 0> eta;
   real<lower = 0, upper = 1> phi;// phi
+  real<lower = 0> eta;
+  real<lower = 0> omega;
 }
 transformed parameters {
   vector[p_stan] normalized_beta; //entire LHS of Equation (S6)
@@ -48,6 +51,7 @@ transformed parameters {
   vector<lower = 0>[p_stan] hist_orig_scale;//Diagonal of Gamma^{-1} in LHS of Eqn (S6)
   real<lower = 0, upper = 1> phi_copy;// to gracefully allow for zero-valued prior standard deviation
   real<lower = 0> eta_copy;// to gracefully allow for point mass on 1
+  real<lower = 0> omega_copy;// to gracefully allow for zero-valued prior standard deviation
   if(phi_sd_stan > 0) {
     phi_copy = phi;
   } else {
@@ -58,22 +62,37 @@ transformed parameters {
   } else {
     eta_copy = 1;
   }
+  if(omega_sd_stan > 0) {
+    omega_copy = omega;
+  } else {
+    omega_copy = exp(omega_mean_stan);
+  }
   beta = append_row(beta_orig, beta_aug);
-  hist_orig_scale = 1 ./ sqrt(scale_to_variance225 * (1 - phi_copy) + phi_copy / eta_copy);
-  normalized_beta = eigenvec_hist_var_stan * (beta_orig + aug_projection_stan * beta_aug - alpha_prior_mean_stan) ./ hist_orig_scale;
+  if(omega_sq_in_variance == 0) {
+    hist_orig_scale = 1 ./ sqrt(scale_to_variance225 * (1 - phi_copy) + phi_copy / eta_copy);
+  } else {
+    hist_orig_scale = 1 ./ sqrt(scale_to_variance225 * (1 - phi_copy) + phi_copy / (eta_copy * omega_copy^2));
+  }
+  normalized_beta = eigenvec_hist_var_stan * (beta_orig + aug_projection_stan * beta_aug - omega_copy * alpha_prior_mean_stan) ./ hist_orig_scale;
 }
 model {
+  mu ~ logistic(0.0, mu_sd_stan);
+  if(phi_sd_stan > 0 && phi_prior_type == 1) {
+    phi ~ normal(phi_mean_stan, phi_sd_stan);
+  } else if(phi_sd_stan > 0 && phi_prior_type == 0) {
+    phi ~ beta(phi_beta_shape1, phi_beta_shape2);
+  }
   if(!is_inf(eta_param_stan)) {
     eta ~ inv_gamma(eta_param_stan, eta_param_stan);
   } else {
     // eta is not used in this case but we need a proper prior to avoid sampling issues
     eta ~ inv_gamma(1.0, 1.0);
   }
-  mu ~ logistic(0.0, mu_sd_stan);
-  if(phi_sd_stan > 0 && phi_prior_type == 1) {
-    phi ~ normal(phi_mean_stan, phi_sd_stan);
-  } else if(phi_sd_stan > 0 && phi_prior_type == 0) {
-    phi ~ beta(phi_beta_shape1, phi_beta_shape2);
+  if(omega_sd_stan > 0) {
+    omega ~ lognormal(omega_mean_stan, omega_sd_stan);
+  } else {
+    // omega is not used in this case but we need a proper prior to avoid sampling issues
+    omega ~ lognormal(0.0, 1.0);
   }
   // Equation (S6) The next two lines together comprise the sensible adaptive prior contribution
   normalized_beta ~ normal(0.0, sqrt_eigenval_hist_var_stan);

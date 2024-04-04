@@ -2,7 +2,7 @@
 #'
 #' Program for fitting a GLM equipped with the yet-unpublished version 2 of the
 #' 'sensible adaptive bayes' prior. Version 2 refers to \eqn{\beta^o + \bm P
-#' \beta^a \sim N(\psi m_\alpha, \psi^2 {\bm S}_\alpha / \phi)} (contrast to
+#' \beta^a \sim N(\omega m_\alpha, \eta \omega^2 {\bm S}_\alpha / \phi)} (contrast to
 #' Version 1, the original SAB from Boonstra and Barbaro, which is implemented
 #' in [adaptBayes::glm_sab()] and which uses \eqn{\beta^o + \bm P \beta^a \sim
 #' N(m_\alpha, \eta {\bm S}_\alpha / \phi)})
@@ -50,15 +50,25 @@
 #'   less than 1. An error will be thrown if an invalid parameterization is
 #'   provided, and a warning will be thrown if a parameterization is provided
 #'   that is likely to result in a "challenging" prior.
-#' @param psi_mean see `psi_sd`
-#' @param psi_sd (real) prior mean and standard deviation for psi, which is
+#' @param eta_param (real) prior hyperparmeter for eta, which scales the
+#'   `alpha_prior_cov` in the adaptive prior contribution and is apriori
+#'   distributed as an inverse-gamma random variable. Specifically, `eta_param`
+#'   is a common value for the shape and rate of the inverse-gamma, meaning that
+#'   larger values cause the prior distribution of eta to concentrate around
+#'   one. You may choose `eta_param = Inf` to make eta identically equal to 1
+#' @param omega_mean see `omega_sd`
+#' @param omega_sd (real) prior mean and standard deviation for omega, which is
 #'   apriori distributed as a log-normal random variable. The log-normal is
 #'   parametrized such that these are the mean and normal of the log of the
 #'   random variable, not the random variable itself. If the link function is
 #'   the identity function, i.e. `family = "gaussian"`, then the theory suggests
-#'   that this should be equal to 1 and so you should choose psi_mean and psi_sd
+#'   that this should be equal to 1 and so you should choose omega_mean and omega_sd
 #'   close to zero. For non-linear link functions,i.e. `family = "binomial"`,
-#'   you should choose positive (but probably not too large) values for psi_sd.
+#'   you should choose positive (but probably not too large) values for `omega_sd`.
+#' @param omega_sq_in_variance (logical) should omega^2 additionally scale the
+#'   prior variance? If `TRUE`, then the prior variance will be
+#'   `eta` * `omega`^2 * `alpha_prior_cov.` If `FALSE`, then the prior variance
+#'   will be `eta` * `alpha_prior_cov`.
 #' @param beta_orig_scale see `beta_aug_scale`
 #' @param beta_aug_scale (pos. real) constants indicating the prior scale of the
 #'   horseshoe. Both values correspond to 'c / sigma' in the notation of
@@ -92,8 +102,8 @@
 #' @param mc_stepsize positive stepsize
 #' @param mc_adapt_delta between 0 and 1
 #' @param mc_max_treedepth max tree depth
-#' @param return_as_stanfit (logical) should the function return the stanfit
-#'   object asis or should a summary of stanfit be returned as a regular list
+#' @param return_as_CmdStanMCMC (logical) should the function return the CmdStanMCMC
+#'   object asis or should a summary of CmdStanMCMC be returned as a regular list
 #' @param eigendecomp_hist_var R object of class 'eigen' containing a pxp matrix
 #'   of eigenvectors in each row (equivalent to v_0 in Boonstra and Barbaro) and
 #'   a p-length vector of eigenvalues. This is by default equal to
@@ -141,8 +151,10 @@
 #'               phi_dist = "trunc_norm",
 #'               phi_mean = 1,
 #'               phi_sd = 0.25,
-#'               psi_mean = 0,
-#'               psi_sd = 0.25,
+#'               eta_param = Inf,
+#'               omega_mean = 0,
+#'               omega_sd = 0.15,
+#'               omega_sq_in_variance = TRUE,
 #'               beta_orig_scale = 0.0223,
 #'               beta_aug_scale = 0.0223,
 #'               local_dof = 1,
@@ -171,8 +183,10 @@ glm_sab2 = function(y,
                     phi_dist = "trunc_norm",
                     phi_mean = 1,
                     phi_sd = 0.25,
-                    psi_mean = 0,
-                    psi_sd = 0.25,
+                    eta_param = Inf,
+                    omega_mean = 0,
+                    omega_sd = 0.15,
+                    omega_sq_in_variance = TRUE,
                     beta_orig_scale,
                     beta_aug_scale,
                     local_dof = 1,
@@ -188,7 +202,7 @@ glm_sab2 = function(y,
                     mc_stepsize = 0.1,
                     mc_adapt_delta = 0.9,
                     mc_max_treedepth = 15,
-                    return_as_stanfit = FALSE,
+                    return_as_CmdStanMCMC = FALSE,
                     eigendecomp_hist_var = NULL,
                     scale_to_variance225 = NULL,
                     seed = sample.int(.Machine$integer.max, 1),
@@ -219,7 +233,8 @@ glm_sab2 = function(y,
 
   if(phi_mean < 0 || phi_mean > 1) {stop("'phi_mean' should be between 0 and 1")}
   if(phi_sd < 0) {stop("'phi_sd' must be non-negative")}
-  if(psi_sd < 0) {stop("'psi_sd' must be non-negative")}
+  if(eta_param < 0) {stop("'eta_param' must be non-negative")}
+  if(omega_sd < 0) {stop("'omega_sd' must be non-negative")}
   if(mu_sd < 0) {stop("'mu_sd' must be non-negative")}
 
   if(!is.null(slab_precision)) {
@@ -245,16 +260,16 @@ glm_sab2 = function(y,
   }
 
   # Now we do the sampling in Stan
-  if(phi_mean == 1 && phi_sd == 0 && psi_mean == 0 && psi_sd == 0) {
+  if(phi_mean == 1 && phi_sd == 0 && is.infinite(eta_param) && omega_mean == 0 && omega_sd == 0) {
     model_file <-
       system.file("stan",
-                  paste0("sab2_simple_", family, ".stan"),
+                  paste0("sab_simple_", family, ".stan"),
                   package = "adaptBayes",
                   mustWork = TRUE)
   } else {
     model_file <-
       system.file("stan",
-                  paste0("sab2_", family, ".stan"),
+                  paste0("sab_", family, ".stan"),
                   package = "adaptBayes",
                   mustWork = TRUE)
   }
@@ -283,10 +298,12 @@ glm_sab2 = function(y,
                     phi_prior_type = ifelse(phi_dist == "trunc_norm", 1L, 0L),
                     phi_mean_stan = phi_mean,
                     phi_sd_stan = phi_sd,
-                    psi_mean_stan = psi_mean,
-                    psi_sd_stan = psi_sd,
+                    eta_param_stan = eta_param,
+                    omega_mean_stan = omega_mean,
+                    omega_sd_stan = omega_sd,
                     mu_sd_stan = mu_sd,
-                    only_prior = as.integer(only_prior)),
+                    only_prior = as.integer(only_prior),
+                    omega_sq_in_variance = ifelse(omega_sq_in_variance, 1L, 0L)),
         iter_warmup = mc_warmup,
         iter = mc_iter_after_warmup,
         chains = mc_chains,
@@ -302,23 +319,27 @@ glm_sab2 = function(y,
     stop(curr_fit$value);
   }
 
-  if(return_as_stanfit) {
+  if(return_as_CmdStanMCMC) {
     curr_fit$value;
 
   } else {
 
-    model_diagnostics <- curr_fit$value$sampler_diagnostics()
+    model_diagnostics <- curr_fit$value$diagnostic_summary()
     model_summary <- curr_fit$value$summary()
 
-    if(phi_mean == 1 && phi_sd == 0 && psi_sd == 0) {
+    if(phi_mean == 1 && phi_sd == 0 && is.infinite(eta_param) && omega_mean == 0 && omega_sd == 0) {
       phi = rep(1, mc_iter_after_warmup * mc_chains);
-      psi = rep(1, mc_iter_after_warmup * mc_chains);
+      eta = rep(1, mc_iter_after_warmup * mc_chains);
+      omega = rep(1, mc_iter_after_warmup * mc_chains);
     } else {
       phi = curr_fit$value$draws("phi_copy", format="matrix")[, 1, drop = T];
-      psi = curr_fit$value$draws("psi_copy", format="matrix")[, 1, drop = T];
+      eta = curr_fit$value$draws("eta_copy", format="matrix")[, 1, drop = T];
+      omega = curr_fit$value$draws("omega_copy", format="matrix")[, 1, drop = T];
     }
 
-    list(num_divergences = sum(model_diagnostics[,,"divergent__"]),
+    list(num_divergences = sum(model_diagnostics$num_divergent),
+         num_max_treedepth = sum(model_diagnostics$num_max_treedepth),
+         min_ebfmi = min(model_diagnostics$ebfmi),
          max_rhat = max(model_summary$rhat, na.rm=T),
          mu = curr_fit$value$draws("mu", format="matrix")[, 1, drop = T],
          beta = curr_fit$value$draws("beta", format="matrix"),
@@ -326,7 +347,8 @@ glm_sab2 = function(y,
          theta_aug = curr_fit$value$draws("theta_aug", format="matrix"),
          slab = curr_fit$value$draws("slab_copy", format="matrix"),
          phi = phi,
-         psi = psi);
+         eta = eta,
+         omega = omega);
   }
 }
 

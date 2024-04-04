@@ -84,8 +84,8 @@
 #' @param mc_stepsize positive stepsize
 #' @param mc_adapt_delta between 0 and 1
 #' @param mc_max_treedepth max tree depth
-#' @param return_as_stanfit (logical) should the function return the stanfit
-#'   object asis or should a summary of stanfit be returned as a regular list
+#' @param return_as_CmdStanMCMC (logical) should the function return the CmdStanMCMC
+#'   object asis or should a summary of CmdStanMCMC be returned as a regular list
 #' @param eigendecomp_hist_var R object of class 'eigen' containing a pxp matrix
 #'   of eigenvectors in each row (equivalent to v_0 in Boonstra and Barbaro) and
 #'   a p-length vector of eigenvalues. This is by default equal to
@@ -174,7 +174,7 @@ glm_nab = function(y,
                    mc_stepsize = 0.1,
                    mc_adapt_delta = 0.9,
                    mc_max_treedepth = 15,
-                   return_as_stanfit = FALSE,
+                   return_as_CmdStanMCMC = FALSE,
                    eigendecomp_hist_var = NULL,
                    scale_to_variance225 = NULL,
                    seed = sample.int(.Machine$integer.max, 1),
@@ -290,12 +290,12 @@ glm_nab = function(y,
     stop(curr_fit$value);
   }
 
-  if(return_as_stanfit) {
+  if(return_as_CmdStanMCMC) {
     curr_fit$value;
 
   } else {
 
-    model_diagnostics <- curr_fit$value$sampler_diagnostics()
+    model_diagnostics <- curr_fit$value$diagnostic_summary()
     model_summary <- curr_fit$value$summary()
 
     if(phi_mean == 1 && phi_sd == 0 && is.infinite(eta_param)) {
@@ -306,7 +306,9 @@ glm_nab = function(y,
       eta = curr_fit$value$draws("eta_copy", format="matrix")[, 1, drop = T];
     }
 
-    list(num_divergences = sum(model_diagnostics[,,"divergent__"]),
+    list(num_divergences = sum(model_diagnostics$num_divergent),
+         num_max_treedepth = sum(model_diagnostics$num_max_treedepth),
+         min_ebfmi = min(model_diagnostics$ebfmi),
          max_rhat = max(model_summary$rhat, na.rm=T),
          mu = curr_fit$value$draws("mu", format="matrix")[, 1, drop = T],
          beta = curr_fit$value$draws("beta", format="matrix"),
