@@ -16,7 +16,7 @@ glm_sab2(
   phi_sd = 0.25,
   eta_param = Inf,
   omega_mean = 0,
-  omega_sd = 0.25,
+  omega_sd = 0.15,
   omega_sq_in_variance = TRUE,
   beta_orig_scale,
   beta_aug_scale,
@@ -33,7 +33,7 @@ glm_sab2(
   mc_stepsize = 0.1,
   mc_adapt_delta = 0.9,
   mc_max_treedepth = 15,
-  return_as_stanfit = FALSE,
+  return_as_CmdStanMCMC = FALSE,
   eigendecomp_hist_var = NULL,
   scale_to_variance225 = NULL,
   seed = sample.int(.Machine$integer.max, 1),
@@ -109,7 +109,7 @@ random variable, not the random variable itself. If the link function is
 the identity function, i.e. \code{family = "gaussian"}, then the theory suggests
 that this should be equal to 1 and so you should choose omega_mean and omega_sd
 close to zero. For non-linear link functions,i.e. \code{family = "binomial"},
-you should choose positive (but probably not too large) values for omega_sd.}
+you should choose positive (but probably not too large) values for \code{omega_sd}.}
 
 \item{omega_sq_in_variance}{(logical) should omega^2 additionally scale the
 prior variance? If \code{TRUE}, then the prior variance will be
@@ -164,8 +164,8 @@ the prior?}
 
 \item{mc_max_treedepth}{max tree depth}
 
-\item{return_as_stanfit}{(logical) should the function return the stanfit
-object asis or should a summary of stanfit be returned as a regular list}
+\item{return_as_CmdStanMCMC}{(logical) should the function return the CmdStanMCMC
+object asis or should a summary of CmdStanMCMC be returned as a regular list}
 
 \item{eigendecomp_hist_var}{R object of class 'eigen' containing a pxp matrix
 of eigenvectors in each row (equivalent to v_0 in Boonstra and Barbaro) and
@@ -227,7 +227,7 @@ foo = glm_sab2(y = current$y_curr,
               phi_sd = 0.25,
               eta_param = Inf,
               omega_mean = 0,
-              omega_sd = 0.25,
+              omega_sd = 0.15,
               omega_sq_in_variance = TRUE,
               beta_orig_scale = 0.0223,
               beta_aug_scale = 0.0223,

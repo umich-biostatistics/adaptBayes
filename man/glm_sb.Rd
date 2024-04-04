@@ -24,7 +24,7 @@ glm_sb(
   mc_stepsize = 0.1,
   mc_adapt_delta = 0.9,
   mc_max_treedepth = 15,
-  return_as_stanfit = FALSE,
+  return_as_CmdStanMCMC = FALSE,
   eigendecomp_hist_var = NULL,
   scale_to_variance225 = NULL,
   seed = sample.int(.Machine$integer.max, 1)
@@ -110,8 +110,8 @@ the prior?}
 
 \item{mc_max_treedepth}{max tree depth}
 
-\item{return_as_stanfit}{(logical) should the function return the stanfit
-object asis or should a summary of stanfit be returned as a regular list}
+\item{return_as_CmdStanMCMC}{(logical) should the function return the CmdStanMCMC
+object asis or should a summary of CmdStanMCMC be returned as a regular list}
 
 \item{eigendecomp_hist_var}{R object of class 'eigen' containing a pxp matrix
 of eigenvectors in each row (equivalent to v_0 in Boonstra and Barbaro) and

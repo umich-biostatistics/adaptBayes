@@ -40,8 +40,8 @@
 #' @param mc_stepsize positive stepsize
 #' @param mc_adapt_delta between 0 and 1
 #' @param mc_max_treedepth max tree depth
-#' @param return_as_stanfit (logical) should the function return the stanfit
-#'   object asis or should a summary of stanfit be returned as a regular list
+#' @param return_as_CmdStanMCMC (logical) should the function return the CmdStanMCMC
+#'   object asis or should a summary of CmdStanMCMC be returned as a regular list
 #' @param seed seed for the underlying STAN model to allow for reproducibility
 #' @param slab_precision (pos. real) the slab-part of the regularized horseshoe,
 #'   this is equivalent to (1/d)^2 in the notation of Boonstra and Barbaro. If
@@ -111,7 +111,7 @@ glm_studt = function(y,
                      mc_stepsize = 0.1,
                      mc_adapt_delta = 0.9,
                      mc_max_treedepth = 15,
-                     return_as_stanfit = FALSE,
+                     return_as_CmdStanMCMC = FALSE,
                      seed = sample.int(.Machine$integer.max, 1),
                      slab_precision = NULL
 ) {
@@ -164,15 +164,17 @@ glm_studt = function(y,
   }
 
 
-  if(return_as_stanfit) {
+  if(return_as_CmdStanMCMC) {
     curr_fit$value;
 
   } else {
 
-    model_diagnostics <- curr_fit$value$sampler_diagnostics()
+    model_diagnostics <- curr_fit$value$diagnostic_summary()
     model_summary <- curr_fit$value$summary()
 
-    list(num_divergences = sum(model_diagnostics[,,"divergent__"]),
+    list(num_divergences = sum(model_diagnostics$num_divergent),
+         num_max_treedepth = sum(model_diagnostics$num_max_treedepth),
+         min_ebfmi = min(model_diagnostics$ebfmi),
          max_rhat = max(model_summary$rhat, na.rm=T),
          mu = curr_fit$value$draws("mu", format="matrix")[, 1, drop = T],
          beta = curr_fit$value$draws("beta", format="matrix"),
