@@ -93,7 +93,7 @@ solve_for_hiershrink_scale = function(target_mean,
   if(is.infinite(slab_dof)) {
     d_inv_squared = 1 / slab_scale^2
   } else {
-    d_inv_squared = rgamma(n_sim, slab_dof / 2, slab_scale * slab_dof / 2) ^ 2
+    d_inv_squared = rgamma(n_sim, slab_dof / 2, slab_scale^2 * slab_dof / 2)
   }
 
   stopifnot(target_mean > 0 && target_mean < npar);#Ensure proper bounds
@@ -101,20 +101,20 @@ solve_for_hiershrink_scale = function(target_mean,
     diff_target =
     numeric(max_iter);
   log_scale[1] = log(target_mean/(npar - target_mean) / sqrt(n));
-  random_scales = 1 / (d_inv_squared + 1 / (exp(2*log_scale[1]) * lambda_sq));
-  kappa = 1 / (1 + n * random_scales);
+  scales_sq = 1 / (d_inv_squared + 1 / (exp(2*log_scale[1]) * lambda_sq));
+  kappa = 1 / (1 + n * scales_sq);
   diff_target[1] = mean(rowSums(1 - kappa)) - target_mean;
   log_scale[2] = 0.02 + log_scale[1];
-  random_scales = 1 / (d_inv_squared + 1 / (exp(2*log_scale[2]) * lambda_sq));
-  kappa = 1 / (1 + n * random_scales);
+  scales_sq = 1 / (d_inv_squared + 1 / (exp(2*log_scale[2]) * lambda_sq));
+  kappa = 1 / (1 + n * scales_sq);
   diff_target[2] = mean(rowSums(1 - kappa)) - target_mean;
   i=2;
   while(T) {
     i = i+1;
     if(i > max_iter) {i = i-1; break;}
     log_scale[i] = log_scale[i-1] - diff_target[i-1]*(log_scale[i-1]-log_scale[i-2])/(diff_target[i-1]-diff_target[i-2]);
-    random_scales = 1 / (d_inv_squared + 1 / (exp(2*log_scale[i]) * lambda_sq));
-    kappa = 1 / (1 + n * random_scales);
+    scales_sq = 1 / (d_inv_squared + 1 / (exp(2*log_scale[i]) * lambda_sq));
+    kappa = 1 / (1 + n * scales_sq);
     diff_target[i] = mean(rowSums(1 - kappa)) - target_mean;
     if(abs(diff_target[i] - diff_target[i-1]) < tol) {break;}
   }
