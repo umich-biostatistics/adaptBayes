@@ -6,7 +6,7 @@ data {
   int<lower = 1> n_stan; // n_curr
   int<lower = 1> p_stan; // number of original covariates
   int<lower = 0> q_stan; // number of augmented (or added) covariates
-  real y_stan[n_stan]; // outcome
+  array[n_stan] real y_stan; // outcome
   matrix[n_stan, p_stan + q_stan] x_standardized_stan; // covariates (no intercept)
   matrix[p_stan, q_stan] aug_projection_stan; // {v^o}^(-1) %*% (E[V^a|v^o]- E[V^a|v^o = 0]), Eqn (9)
   vector[p_stan] alpha_prior_mean_stan; // m_alpha
