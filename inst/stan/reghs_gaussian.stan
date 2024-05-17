@@ -3,7 +3,7 @@ data {
   int<lower = 1> n_stan; // n_curr
   int<lower = 1> p_stan; // number of original covariates
   int<lower = 0> q_stan; // number of augmented (or added) covariates
-  real y_stan[n_stan]; // outcome
+  array[n_stan] real y_stan; // outcome
   matrix[n_stan, p_stan + q_stan] x_standardized_stan; //covariates (no intercept)
   real<lower = 0> local_dof_stan; // dof of pi(lambda), = 1
   real<lower = 0> global_dof_stan; // dof of pi(tau), = 1

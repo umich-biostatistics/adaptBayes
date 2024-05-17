@@ -2,7 +2,7 @@
 data {
   int<lower = 0> n_stan; // num obs
   int<lower = 0> p_stan; // number of covariates
-  real y_stan[n_stan]; // outcome
+  array[n_stan] real y_stan; // outcome
   matrix[n_stan, p_stan] x_standardized_stan; //covariates (no intercept)
   real<lower = 0> dof_stan;
   real<lower = 0> beta_scale_stan;
